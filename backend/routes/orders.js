@@ -2,7 +2,7 @@ import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import pool from '../db/connection.js';
 import { verifyToken } from '../middleware/auth.js';
-import { sendOrderConfirmation, sendAdminOrderAlert, sendLowStockAlert, sendAdminCancelAlert } from '../utils/email.js';
+import { sendOrderConfirmation, sendAdminOrderAlert, sendLowStockAlert, sendAdminCancelAlert, sendOrderStatusUpdate } from '../utils/email.js';
 
 const router = express.Router();
 
@@ -194,6 +194,13 @@ router.patch('/:id/cancel', verifyToken, async (req, res) => {
       customerEmail: req.user.email,
       totalCents: order.total_cents
     }).catch(err => console.error('Admin cancel alert failed:', err));
+
+    sendOrderStatusUpdate({
+      to: req.user.email,
+      name: req.user.name,
+      orderId: order.id,
+      status: 'cancelled'
+    }).catch(err => console.error('Customer cancel email failed:', err));
 
     res.json({ message: 'Order cancelled' });
   } catch (err) {

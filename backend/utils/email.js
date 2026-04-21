@@ -114,7 +114,7 @@ export async function sendAdminOrderAlert({ orderId, customerName, customerEmail
       </tr>
     </table>
     <div style="margin-top:28px;text-align:center">
-      <a href="http://localhost:3000/admin/orders"
+      <a href="https://abona.onrender.com/admin/orders"
          style="background:#232f3e;color:#f0c14b;text-decoration:none;padding:12px 32px;border-radius:6px;font-weight:600;display:inline-block">
         View in Admin Panel
       </a>
@@ -219,7 +219,7 @@ export async function sendLowStockAlert({ products }) {
       <tbody>${rows}</tbody>
     </table>
     <div style="margin-top:28px;text-align:center">
-      <a href="http://localhost:3000/admin/products"
+      <a href="https://abona.onrender.com/admin/products"
          style="background:#f0c14b;color:#111;text-decoration:none;padding:12px 32px;border-radius:6px;font-weight:600;display:inline-block">
         Manage Inventory
       </a>
@@ -272,7 +272,7 @@ export async function sendAdminCancelAlert({ orderId, customerName, customerEmai
       <div style="font-weight:700;font-size:18px;color:#c40000">${fmt(totalCents)}</div>
     </div>
     <div style="margin-top:28px;text-align:center">
-      <a href="http://localhost:3000/admin/orders"
+      <a href="https://abona.onrender.com/admin/orders"
          style="background:#232f3e;color:#f0c14b;text-decoration:none;padding:12px 32px;border-radius:6px;font-weight:600;display:inline-block">
         View in Admin Panel
       </a>
