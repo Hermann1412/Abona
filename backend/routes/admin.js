@@ -188,8 +188,7 @@ router.get('/api/orders', requireAdminAPI, async (req, res) => {
       params.push(status);
     }
 
-    query += ' ORDER BY o.created_at DESC LIMIT ? OFFSET ?';
-    params.push(limit, offset);
+    query += ` ORDER BY o.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
 
     const [orders] = await pool.execute(query, params);
 
@@ -405,8 +404,7 @@ router.get('/api/reviews', requireAdminAPI, async (req, res) => {
        JOIN products p ON r.product_id = p.id
        ${where}
        ORDER BY r.created_at DESC
-       LIMIT ? OFFSET ?`,
-      [limit, offset]
+       LIMIT ${limit} OFFSET ${offset}`
     );
     const [[{ total }]] = await pool.execute(
       `SELECT COUNT(*) AS total FROM reviews r ${where}`
@@ -449,8 +447,7 @@ router.get('/api/users', requireAdminAPI, async (req, res) => {
     const offset = (page - 1) * limit;
 
     const [users] = await pool.execute(
-      'SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC LIMIT ? OFFSET ?',
-      [limit, offset]
+      `SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`
     );
     const [[{ total }]] = await pool.execute('SELECT COUNT(*) AS total FROM users');
 
