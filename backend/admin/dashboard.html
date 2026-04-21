@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard — Abona Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/assets/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h2>Abona Admin</h2>
+        <span>Control Panel</span>
+      </div>
+      <ul class="sidebar-nav">
+        <li><a href="/admin/dashboard"><span class="icon">📊</span> Dashboard</a></li>
+        <li><a href="/admin/orders"><span class="icon">📦</span> Orders</a></li>
+        <li><a href="/admin/products"><span class="icon">🛍️</span> Products</a></li>
+        <li><a href="/admin/users"><span class="icon">👥</span> Users</a></li>
+        <li><a href="/admin/reviews"><span class="icon">⭐</span> Reviews</a></li>
+        <li><a href="/admin/coupons"><span class="icon">🏷️</span> Coupons</a></li>
+      </ul>
+      <div class="sidebar-footer">
+        <div class="admin-name">Admin</div>
+        <div class="admin-email">Loading...</div>
+        <button class="logout-btn">Sign out</button>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <div class="topbar">
+        <h1>Dashboard</h1>
+        <span id="lastUpdated" style="font-size:12px;color:#8c95a6"></span>
+      </div>
+      <div class="page-body">
+
+        <!-- Stat cards -->
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card"><div class="label">Total Users</div><div class="value" id="statUsers">—</div></div>
+          <div class="stat-card"><div class="label">Total Orders</div><div class="value" id="statOrders">—</div></div>
+          <div class="stat-card"><div class="label">Pending Orders</div><div class="value" id="statPending">—</div></div>
+          <div class="stat-card"><div class="label">Total Revenue</div><div class="value revenue" id="statRevenue">—</div></div>
+          <div class="stat-card"><div class="label">Products</div><div class="value" id="statProducts">—</div></div>
+        </div>
+
+        <!-- Charts row -->
+        <div class="charts-grid">
+          <div class="chart-card">
+            <h3>Revenue — Last 14 Days</h3>
+            <canvas id="revenueChart" height="120"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3>Orders by Status</h3>
+            <canvas id="statusChart" height="120"></canvas>
+          </div>
+        </div>
+
+        <!-- Top products bar chart -->
+        <div class="chart-card" style="margin-bottom:20px">
+          <h3>Top 5 Products by Revenue</h3>
+          <canvas id="topProductsChart" height="80"></canvas>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="table-card">
+          <div class="table-card-header">
+            <h2>Recent Orders</h2>
+            <a href="/admin/orders" class="btn btn-light">View all</a>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="recentOrdersBody">
+              <tr><td colspan="5" class="empty-state">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <script src="/admin/assets/admin.js"></script>
+  <script>
+    async function loadDashboard() {
+      await guardAdmin();
+
+      const [statsRes, ordersRes, revenueRes, topRes, statusRes] = await Promise.all([
+        fetch('/admin/api/stats',               { credentials: 'include' }),
+        fetch('/admin/api/orders?page=1',        { credentials: 'include' }),
+        fetch('/admin/api/stats/revenue',        { credentials: 'include' }),
+        fetch('/admin/api/stats/top-products',   { credentials: 'include' }),
+        fetch('/admin/api/stats/order-statuses', { credentials: 'include' })
+      ]);
+
+      // Stat cards
+      if (statsRes.ok) {
+        const s = await statsRes.json();
+        document.getElementById('statUsers').textContent    = s.users;
+        document.getElementById('statOrders').textContent   = s.orders;
+        document.getElementById('statPending').textContent  = s.pending;
+        document.getElementById('statRevenue').textContent  = formatCurrency(s.revenue);
+        document.getElementById('statProducts').textContent = s.products;
+      }
+
+      // Recent orders table
+      if (ordersRes.ok) {
+        const { orders } = await ordersRes.json();
+        const tbody = document.getElementById('recentOrdersBody');
+        if (!orders.length) {
+          tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No orders yet</td></tr>';
+        } else {
+          tbody.innerHTML = orders.slice(0, 8).map(o => `
+            <tr>
+              <td><span class="order-id-cell" onclick="copyId(this,'${o.id}')" title="Click to copy full ID">${o.id.slice(0, 8)}…</span></td>
+              <td>
+                <div style="font-weight:500">${o.user_name}</div>
+                <div style="color:#8c95a6;font-size:12px">${o.user_email}</div>
+              </td>
+              <td>${formatCurrency(o.total_cents)}</td>
+              <td>${statusBadge(o.status)}</td>
+              <td>${formatDate(o.created_at)}</td>
+            </tr>
+          `).join('');
+        }
+      }
+
+      document.getElementById('lastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+
+      // ── Charts ──────────────────────────────────────────────────────────────
+
+      // Revenue line chart
+      if (revenueRes.ok) {
+        const data = await revenueRes.json();
+        new Chart(document.getElementById('revenueChart'), {
+          type: 'line',
+          data: {
+            labels: data.map(d =>
+              new Date(d.day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            ),
+            datasets: [{
+              label: 'Revenue',
+              data: data.map(d => +(d.revenue / 100).toFixed(2)),
+              borderColor: '#5a7af8',
+              backgroundColor: 'rgba(90,122,248,0.08)',
+              tension: 0.4,
+              fill: true,
+              pointRadius: 4,
+              pointBackgroundColor: '#5a7af8'
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { callback: v => '฿' + Number(v).toLocaleString() }
+              }
+            }
+          }
+        });
+      }
+
+      // Orders by status donut
+      if (statusRes.ok) {
+        const data = await statusRes.json();
+        const COLOR = {
+          pending: '#f0c14b', paid: '#60a5fa', shipped: '#a78bfa',
+          delivered: '#34d399', cancelled: '#f87171'
+        };
+        new Chart(document.getElementById('statusChart'), {
+          type: 'doughnut',
+          data: {
+            labels: data.map(d => d.status.charAt(0).toUpperCase() + d.status.slice(1)),
+            datasets: [{
+              data: data.map(d => d.count),
+              backgroundColor: data.map(d => COLOR[d.status] || '#ddd'),
+              borderWidth: 2,
+              borderColor: '#fff'
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: 'bottom', labels: { font: { size: 12 } } }
+            }
+          }
+        });
+      }
+
+      // Top products horizontal bar
+      if (topRes.ok) {
+        const data = await topRes.json();
+        new Chart(document.getElementById('topProductsChart'), {
+          type: 'bar',
+          data: {
+            labels: data.map(d =>
+              d.product_name.length > 35 ? d.product_name.slice(0, 35) + '…' : d.product_name
+            ),
+            datasets: [{
+              label: 'Revenue',
+              data: data.map(d => +(d.revenue / 100).toFixed(2)),
+              backgroundColor: 'rgba(90,122,248,0.8)',
+              borderRadius: 6
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { ticks: { callback: v => '฿' + Number(v).toLocaleString() } }
+            }
+          }
+        });
+      }
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

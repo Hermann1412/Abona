@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <title>Account Settings — Abona Shop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <script>if(localStorage.getItem('darkMode')==='true')document.documentElement.classList.add('dark');</script>
+  <link rel="stylesheet" href="styles/shared/general.css">
+  <link rel="stylesheet" href="styles/shared/amazon-header.css">
+  <style>
+    .settings-page { max-width: 780px; margin: 32px auto; padding: 0 20px 60px; }
+    .settings-title { font-size: 26px; font-weight: 500; margin-bottom: 28px; color: var(--abona-text); }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--abona-border); margin-bottom: 28px; flex-wrap: wrap; }
+    .tab-btn {
+      padding: 10px 18px; background: none; border: none; font-size: 14px;
+      font-weight: 500; color: var(--abona-sub); cursor: pointer; border-bottom: 3px solid transparent;
+      margin-bottom: -2px; transition: color 0.2s; font-family: inherit;
+    }
+    .tab-btn.active { color: #c73060; border-bottom-color: #c73060; }
+    .tab-btn:hover { color: var(--abona-text); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--abona-card); border: 1px solid var(--abona-border);
+      border-radius: 10px; padding: 24px; margin-bottom: 20px;
+      transition: background 0.3s, border-color 0.3s;
+    }
+    .card h2 { font-size: 16px; font-weight: 600; margin: 0 0 18px; color: var(--abona-text); }
+
+    /* ── Form ── */
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--abona-sub); margin-bottom: 6px; }
+    .form-group input {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--abona-border);
+      border-radius: 6px; font-size: 14px; background: var(--abona-input-bg);
+      color: var(--abona-text); box-sizing: border-box; transition: border-color 0.2s;
+      font-family: inherit;
+    }
+    .form-group input:focus { outline: none; border-color: #c73060; box-shadow: 0 0 0 2px rgba(199,48,96,0.15); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media(max-width:540px) { .form-row { grid-template-columns: 1fr; } }
+
+    /* ── Buttons ── */
+    .btn-save {
+      padding: 10px 24px;
+      background: linear-gradient(135deg, #c73060, #a8264f);
+      border: 1px solid #8c1e40;
+      border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer;
+      color: #fff; transition: all 0.15s; font-family: inherit;
+    }
+    .btn-save:hover { background: linear-gradient(135deg, #d9406d, #b82f59); }
+    .btn-danger {
+      padding: 10px 24px; background: var(--abona-card); border: 1px solid #c40000;
+      color: #c40000; border-radius: 6px; font-size: 14px; cursor: pointer; font-family: inherit;
+    }
+    .btn-danger:hover { background: #fff5f5; }
+    .btn-secondary {
+      padding: 8px 16px; background: var(--abona-card); border: 1px solid var(--abona-border);
+      border-radius: 6px; font-size: 13px; cursor: pointer; color: var(--abona-text); font-family: inherit;
+      transition: all 0.15s;
+    }
+    .btn-secondary:hover { border-color: #c73060; color: #c73060; }
+
+    /* ── Avatar ── */
+    .avatar-row { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
+    .avatar-img {
+      width: 80px; height: 80px; border-radius: 50%; object-fit: cover;
+      border: 3px solid var(--abona-border); background: #ddd; cursor: pointer;
+    }
+    .avatar-placeholder {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: linear-gradient(135deg, #c73060, #a8264f);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; font-weight: 700; color: #fff; flex-shrink: 0; cursor: pointer;
+    }
+    .avatar-actions { display: flex; flex-direction: column; gap: 6px; }
+    .avatar-btn {
+      padding: 7px 14px; border-radius: 6px; font-size: 13px; cursor: pointer;
+      border: 1px solid var(--abona-border); background: var(--abona-card); color: var(--abona-text);
+      display: flex; align-items: center; gap: 6px; font-family: inherit; transition: all 0.15s;
+    }
+    .avatar-btn:hover { border-color: #c73060; color: #c73060; }
+    .avatar-btn.primary {
+      background: linear-gradient(135deg, #c73060, #a8264f);
+      border-color: #8c1e40; font-weight: 600; color: #fff;
+    }
+    .avatar-btn.primary:hover { background: linear-gradient(135deg, #d9406d, #b82f59); color: #fff; }
+
+    /* Camera modal */
+    .camera-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; }
+    .camera-modal.open { display: flex; }
+    .camera-box { background: #111; border-radius: 12px; padding: 20px; text-align: center; max-width: 440px; width: 95vw; }
+    .camera-box video { width: 100%; border-radius: 8px; background: #000; }
+    .camera-box canvas { display: none; }
+    .camera-controls { display: flex; gap: 10px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+    .cam-btn { padding: 9px 20px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500; font-family: inherit; }
+    .cam-snap { background: #c73060; color: #fff; }
+    .cam-retake { background: #555; color: #fff; display: none; }
+    .cam-use { background: #22c55e; color: #fff; display: none; }
+    .cam-cancel { background: #c40000; color: #fff; }
+
+    /* ── Dark mode toggle ── */
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
+    .toggle-label { font-size: 14px; color: var(--abona-text); }
+    .toggle-switch { position: relative; width: 46px; height: 26px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0; background: var(--abona-border); border-radius: 26px; cursor: pointer; transition: 0.3s;
+    }
+    .toggle-slider:before {
+      content: ''; position: absolute; width: 20px; height: 20px;
+      left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: 0.3s;
+    }
+    input:checked + .toggle-slider { background: #c73060; }
+    input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+    /* ── Messages ── */
+    .msg { font-size: 13px; margin-top: 10px; padding: 8px 12px; border-radius: 6px; display: none; }
+    .msg.success { background: #d4edda; color: #155724; display: block; }
+    .msg.error   { background: #f8d7da; color: #721c24; display: block; }
+
+    /* ── Address cards ── */
+    .address-card {
+      border: 1px solid var(--abona-border); border-radius: 8px; padding: 14px 16px;
+      margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start;
+      background: var(--abona-card);
+    }
+    .address-card .addr-info { font-size: 13px; line-height: 1.6; color: var(--abona-text); }
+    .address-card .addr-label {
+      font-size: 11px; font-weight: 600; background: #c73060; color: #fff;
+      padding: 2px 8px; border-radius: 10px; display: inline-block; margin-bottom: 6px;
+    }
+    .address-card .default-badge {
+      font-size: 11px; background: #d4edda; color: #155724;
+      padding: 2px 8px; border-radius: 10px; margin-left: 6px;
+    }
+    .delete-addr-btn { background: none; border: none; color: #c40000; cursor: pointer; font-size: 18px; padding: 0 4px; }
+
+    /* ── Danger zone ── */
+    .danger-zone { border-color: #f5c6cb; }
+    .danger-zone h2 { color: #c40000; }
+
+    /* ── Quick links ── */
+    .quick-links { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media(max-width:480px) { .quick-links { grid-template-columns: 1fr; } }
+    .quick-link {
+      display: flex; align-items: center; gap: 12px; padding: 16px;
+      border: 1px solid var(--abona-border); border-radius: 8px; text-decoration: none;
+      color: var(--abona-text); background: var(--abona-card); transition: border-color 0.2s;
+    }
+    .quick-link:hover { border-color: #c73060; }
+    .quick-link .ql-icon { font-size: 24px; }
+    .quick-link .ql-text { font-size: 13px; font-weight: 500; }
+    .quick-link .ql-sub { font-size: 12px; color: var(--abona-sub); }
+  </style>
+</head>
+<body>
+  <div class="amazon-header">
+    <div class="amazon-header-left-section">
+      <a href="index.html" class="header-link">
+        <img class="amazon-logo" src="images/abona.png" alt="Abona" onerror="this.style.display='none'">
+        <img class="amazon-mobile-logo" src="images/abona.png" alt="Abona" onerror="this.style.display='none'">
+      </a>
+    </div>
+    <div class="amazon-header-middle-section">
+      <input class="search-bar js-search-bar" type="text" placeholder="Search">
+      <button class="search-button js-search-btn">
+        <img class="search-icon" src="images/icons/search-icon.png">
+      </button>
+    </div>
+    <div class="amazon-header-right-section">
+      <div class="js-auth-section"></div>
+      <a class="orders-link header-link" href="orders.html">
+        <span class="returns-text">Returns</span>
+        <span class="orders-text">&amp; Orders</span>
+      </a>
+      <a class="cart-link header-link" href="checkout.html">
+        <img class="cart-icon" src="images/icons/cart-icon.png">
+        <div class="cart-quantity js-cart-quantity">0</div>
+        <div class="cart-text">Cart</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="settings-page">
+    <div class="settings-title">Account Settings</div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="profile">👤 Profile</button>
+      <button class="tab-btn" data-tab="password">🔒 Password</button>
+      <button class="tab-btn" data-tab="addresses">📍 Addresses</button>
+      <button class="tab-btn" data-tab="appearance">🎨 Appearance</button>
+      <button class="tab-btn" data-tab="account">⚙️ Account</button>
+    </div>
+
+    <!-- ── Profile Tab ── -->
+    <div class="tab-panel active" id="tab-profile">
+      <div class="card">
+        <h2>Personal Information</h2>
+        <div class="avatar-row">
+          <div class="avatar-placeholder js-avatar-placeholder" id="avatar-placeholder" title="Click to upload photo">?</div>
+          <img class="avatar-img js-avatar-img" id="avatar-img" src="" alt="Avatar" style="display:none" title="Click to upload photo">
+          <div class="avatar-actions">
+            <div>
+              <div style="font-size:14px;font-weight:500" id="profile-name">Loading…</div>
+              <div style="font-size:13px;color:var(--sub)" id="profile-email"></div>
+              <div style="font-size:12px;color:var(--sub);margin-top:4px" id="profile-joined"></div>
+            </div>
+            <button class="avatar-btn primary" id="upload-photo-btn">📁 Upload Photo</button>
+            <button class="avatar-btn" id="camera-photo-btn">📷 Take Photo</button>
+            <input type="file" id="avatar-file-input" accept="image/*" style="display:none">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="edit-name" placeholder="Your name">
+          </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="tel" id="edit-phone" placeholder="+66 XX XXX XXXX">
+          </div>
+        </div>
+
+        <button class="btn-save" id="save-profile">Save Changes</button>
+        <div class="msg" id="profile-msg"></div>
+      </div>
+    </div>
+
+    <!-- ── Password Tab ── -->
+    <div class="tab-panel" id="tab-password">
+      <div class="card">
+        <h2>Change Password</h2>
+        <div class="form-group">
+          <label>Current Password</label>
+          <input type="password" id="cur-pass" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+          <label>New Password</label>
+          <input type="password" id="new-pass" placeholder="Min. 8 characters">
+        </div>
+        <div class="form-group">
+          <label>Confirm New Password</label>
+          <input type="password" id="confirm-pass" placeholder="Repeat new password">
+        </div>
+        <button class="btn-save" id="save-password">Update Password</button>
+        <div class="msg" id="password-msg"></div>
+      </div>
+    </div>
+
+    <!-- ── Addresses Tab ── -->
+    <div class="tab-panel" id="tab-addresses">
+      <div class="card">
+        <h2>Saved Addresses</h2>
+        <div id="addresses-list"><p style="color:var(--sub);font-size:14px">Loading…</p></div>
+        <button class="btn-secondary" id="show-add-address" style="margin-top:8px">+ Add New Address</button>
+      </div>
+
+      <div class="card" id="add-address-form" style="display:none">
+        <h2>New Address</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Label</label>
+            <input type="text" id="addr-label" placeholder="Home / Work / Other">
+          </div>
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="addr-name" placeholder="Recipient name">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="tel" id="addr-phone" placeholder="+66 XX XXX XXXX">
+          </div>
+          <div class="form-group">
+            <label>Postal Code</label>
+            <input type="text" id="addr-postal" placeholder="10110">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Address Line 1</label>
+          <input type="text" id="addr-line1" placeholder="House no., Street, Soi">
+        </div>
+        <div class="form-group">
+          <label>Address Line 2 (optional)</label>
+          <input type="text" id="addr-line2" placeholder="Building, Floor, Unit">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>District / City</label>
+            <input type="text" id="addr-city" placeholder="Bangkok">
+          </div>
+          <div class="form-group">
+            <label>Province</label>
+            <input type="text" id="addr-state" placeholder="Bangkok">
+          </div>
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:8px">
+          <input type="checkbox" id="addr-default" style="width:auto">
+          <label for="addr-default" style="margin:0;font-size:13px">Set as default address</label>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:4px">
+          <button class="btn-save" id="submit-address">Save Address</button>
+          <button class="btn-secondary" id="cancel-address">Cancel</button>
+        </div>
+        <div class="msg" id="address-msg"></div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="quick-links" style="margin-top:8px">
+        <a class="quick-link" href="orders.html">
+          <span class="ql-icon">📦</span>
+          <div><div class="ql-text">Your Orders</div><div class="ql-sub">View order history</div></div>
+        </a>
+        <a class="quick-link" href="tracking.html">
+          <span class="ql-icon">🚚</span>
+          <div><div class="ql-text">Track Package</div><div class="ql-sub">Check delivery status</div></div>
+        </a>
+      </div>
+    </div>
+
+    <!-- ── Appearance Tab ── -->
+    <div class="tab-panel" id="tab-appearance">
+      <div class="card">
+        <h2>Display Preferences</h2>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label" style="font-weight:500">🌙 Dark Mode</div>
+            <div style="font-size:12px;color:var(--sub);margin-top:2px">Switch between light and dark theme</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="dark-mode-toggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Account Tab ── -->
+    <div class="tab-panel" id="tab-account">
+      <div class="card">
+        <h2>Account Information</h2>
+        <div style="font-size:14px;line-height:2;color:var(--text)">
+          <div><strong>Email:</strong> <span id="acct-email">—</span></div>
+          <div><strong>Member since:</strong> <span id="acct-joined">—</span></div>
+          <div><strong>Role:</strong> <span id="acct-role">—</span></div>
+        </div>
+      </div>
+
+      <div class="card danger-zone">
+        <h2>Delete Account</h2>
+        <p style="font-size:13px;color:var(--sub);margin-bottom:16px">
+          This will permanently delete your account, orders, and all data. This action cannot be undone.
+        </p>
+        <div class="form-group">
+          <label>Enter your password to confirm</label>
+          <input type="password" id="delete-pass" placeholder="Your password">
+        </div>
+        <button class="btn-danger" id="delete-account">Delete My Account</button>
+        <div class="msg" id="delete-msg"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Camera modal -->
+  <div class="camera-modal" id="camera-modal">
+    <div class="camera-box">
+      <video id="cam-video" autoplay playsinline></video>
+      <canvas id="cam-canvas"></canvas>
+      <div class="camera-controls">
+        <button class="cam-btn cam-snap" id="cam-snap">📸 Take Photo</button>
+        <button class="cam-btn cam-retake" id="cam-retake">🔄 Retake</button>
+        <button class="cam-btn cam-use" id="cam-use">✓ Use This Photo</button>
+        <button class="cam-btn cam-cancel" id="cam-cancel">✕ Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initAuth, requireAuth, updateCartBadge } from './scripts/auth.js';
+    import { loadCart, getCartQuantity } from './data/cart.js';
+    import { API_BASE } from './scripts/utils/api.js';
+
+    let profile = null;
+    let pendingAvatarUrl = null; // URL after upload, applied on Save
+
+    async function init() {
+      await initAuth();
+      if (!requireAuth()) return;
+
+      await loadCart();
+      updateCartBadge(getCartQuantity());
+
+      document.querySelector('.js-search-btn').addEventListener('click', () => {
+        const q = document.querySelector('.js-search-bar').value.trim();
+        if (q) window.location.href = `index.html#search:${encodeURIComponent(q)}`;
+      });
+
+      await loadProfile();
+      loadAddresses();
+      initDarkMode();
+      initTabs();
+      initAvatarUpload();
+    }
+
+    // ── Profile ──────────────────────────────────────────────────────────────────
+    async function loadProfile() {
+      const res = await fetch(`${API_BASE}/api/users/me`, { credentials: 'include' });
+      if (!res.ok) return;
+      profile = await res.json();
+
+      document.getElementById('profile-name').textContent  = profile.name;
+      document.getElementById('profile-email').textContent = profile.email;
+      document.getElementById('profile-joined').textContent =
+        'Member since ' + new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+      document.getElementById('edit-name').value  = profile.name || '';
+      document.getElementById('edit-phone').value = profile.phone || '';
+
+      document.getElementById('acct-email').textContent  = profile.email;
+      document.getElementById('acct-role').textContent   = profile.role || 'user';
+      document.getElementById('acct-joined').textContent =
+        new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+      updateAvatar(profile.name, profile.avatar_url);
+    }
+
+    function updateAvatar(name, url) {
+      const placeholder = document.querySelector('.js-avatar-placeholder');
+      const img = document.querySelector('.js-avatar-img');
+      const resolvedUrl = url
+        ? (url.startsWith('/uploads') ? `${API_BASE}${url}` : url)
+        : null;
+      if (resolvedUrl) {
+        img.src = resolvedUrl;
+        img.style.display = 'block';
+        placeholder.style.display = 'none';
+      } else {
+        placeholder.textContent = name?.charAt(0).toUpperCase() || '?';
+        placeholder.style.display = 'flex';
+        img.style.display = 'none';
+      }
+    }
+
+    // ── Avatar Upload + Camera ────────────────────────────────────────────────────
+    function initAvatarUpload() {
+      const fileInput  = document.getElementById('avatar-file-input');
+      const uploadBtn  = document.getElementById('upload-photo-btn');
+      const cameraBtn  = document.getElementById('camera-photo-btn');
+      const placeholder = document.getElementById('avatar-placeholder');
+      const avatarImg  = document.getElementById('avatar-img');
+
+      // Clicking avatar also opens file picker
+      placeholder.addEventListener('click', () => fileInput.click());
+      avatarImg.addEventListener('click', () => fileInput.click());
+      uploadBtn.addEventListener('click', () => fileInput.click());
+
+      fileInput.addEventListener('change', async () => {
+        const file = fileInput.files[0];
+        if (!file) return;
+        await uploadAvatarFile(file);
+        fileInput.value = '';
+      });
+
+      cameraBtn.addEventListener('click', openCamera);
+
+      // Camera modal
+      let stream = null;
+      let capturedBlob = null;
+
+      async function openCamera() {
+        const modal = document.getElementById('camera-modal');
+        const video = document.getElementById('cam-video');
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+          video.srcObject = stream;
+          modal.classList.add('open');
+          setSnapping();
+        } catch {
+          alert('Cannot access camera. Please allow camera permission or use Upload Photo instead.');
+        }
+      }
+
+      function setSnapping() {
+        document.getElementById('cam-snap').style.display   = 'inline-block';
+        document.getElementById('cam-retake').style.display = 'none';
+        document.getElementById('cam-use').style.display    = 'none';
+        document.getElementById('cam-canvas').style.display = 'none';
+        document.getElementById('cam-video').style.display  = 'block';
+      }
+
+      document.getElementById('cam-snap').addEventListener('click', () => {
+        const video  = document.getElementById('cam-video');
+        const canvas = document.getElementById('cam-canvas');
+        canvas.width  = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        canvas.style.display = 'block';
+        video.style.display  = 'none';
+        document.getElementById('cam-snap').style.display   = 'none';
+        document.getElementById('cam-retake').style.display = 'inline-block';
+        document.getElementById('cam-use').style.display    = 'inline-block';
+        canvas.toBlob(blob => { capturedBlob = blob; }, 'image/jpeg', 0.92);
+      });
+
+      document.getElementById('cam-retake').addEventListener('click', setSnapping);
+
+      document.getElementById('cam-use').addEventListener('click', async () => {
+        closeCamera();
+        if (capturedBlob) await uploadAvatarFile(new File([capturedBlob], 'photo.jpg', { type: 'image/jpeg' }));
+      });
+
+      document.getElementById('cam-cancel').addEventListener('click', closeCamera);
+
+      function closeCamera() {
+        stream?.getTracks().forEach(t => t.stop());
+        stream = null;
+        document.getElementById('camera-modal').classList.remove('open');
+      }
+    }
+
+    async function uploadAvatarFile(file) {
+      const msg = document.getElementById('profile-msg');
+      showMsg(msg, 'Uploading…', false);
+      const fd = new FormData();
+      fd.append('image', file);
+      const res = await fetch(`${API_BASE}/api/uploads/avatar`, {
+        method: 'POST', credentials: 'include', body: fd
+      });
+      if (!res.ok) { showMsg(msg, 'Upload failed', true); return; }
+      const { url } = await res.json();
+      pendingAvatarUrl = url;
+      updateAvatar(profile?.name, url);
+      showMsg(msg, 'Photo ready — click Save Changes to apply', false);
+    }
+
+    document.getElementById('save-profile').addEventListener('click', async () => {
+      const msg  = document.getElementById('profile-msg');
+      const body = {
+        name:  document.getElementById('edit-name').value.trim(),
+        phone: document.getElementById('edit-phone').value.trim()
+      };
+      if (pendingAvatarUrl !== null) body.avatar_url = pendingAvatarUrl;
+      if (!body.name) { showMsg(msg, 'Name cannot be empty', true); return; }
+
+      const res = await fetch(`${API_BASE}/api/users/me`, {
+        method: 'PATCH', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (res.ok) {
+        showMsg(msg, 'Profile updated successfully!', false);
+        document.getElementById('profile-name').textContent = body.name;
+        if (pendingAvatarUrl !== null) { profile.avatar_url = pendingAvatarUrl; pendingAvatarUrl = null; }
+      } else {
+        const d = await res.json();
+        showMsg(msg, d.error || 'Failed to update', true);
+      }
+    });
+
+    // ── Password ─────────────────────────────────────────────────────────────────
+    document.getElementById('save-password').addEventListener('click', async () => {
+      const msg     = document.getElementById('password-msg');
+      const curPass = document.getElementById('cur-pass').value;
+      const newPass = document.getElementById('new-pass').value;
+      const confPass = document.getElementById('confirm-pass').value;
+
+      if (newPass !== confPass) { showMsg(msg, 'New passwords do not match', true); return; }
+      if (newPass.length < 8)  { showMsg(msg, 'Password must be at least 8 characters', true); return; }
+
+      const res = await fetch(`${API_BASE}/api/users/me/password`, {
+        method: 'PATCH', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword: curPass, newPassword: newPass })
+      });
+      const d = await res.json();
+      if (res.ok) {
+        showMsg(msg, 'Password changed successfully!', false);
+        ['cur-pass','new-pass','confirm-pass'].forEach(id => document.getElementById(id).value = '');
+      } else {
+        showMsg(msg, d.error || 'Failed to change password', true);
+      }
+    });
+
+    // ── Addresses ────────────────────────────────────────────────────────────────
+    async function loadAddresses() {
+      const res = await fetch(`${API_BASE}/api/users/me/addresses`, { credentials: 'include' });
+      if (!res.ok) return;
+      const addresses = await res.json();
+      const list = document.getElementById('addresses-list');
+
+      if (!addresses.length) {
+        list.innerHTML = '<p style="color:var(--sub);font-size:14px">No saved addresses yet.</p>';
+        return;
+      }
+
+      list.innerHTML = addresses.map(a => `
+        <div class="address-card">
+          <div class="addr-info">
+            <span class="addr-label">${a.label}</span>
+            ${a.is_default ? '<span class="default-badge">Default</span>' : ''}
+            <div><strong>${a.full_name}</strong>${a.phone ? ' · ' + a.phone : ''}</div>
+            <div>${a.line1}${a.line2 ? ', ' + a.line2 : ''}</div>
+            <div>${a.city}${a.state ? ', ' + a.state : ''} ${a.postal_code}</div>
+          </div>
+          <button class="delete-addr-btn" data-id="${a.id}" title="Delete">🗑</button>
+        </div>
+      `).join('');
+
+      list.querySelectorAll('.delete-addr-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Delete this address?')) return;
+          await fetch(`${API_BASE}/api/users/me/addresses/${btn.dataset.id}`, {
+            method: 'DELETE', credentials: 'include'
+          });
+          loadAddresses();
+        });
+      });
+    }
+
+    document.getElementById('show-add-address').addEventListener('click', () => {
+      document.getElementById('add-address-form').style.display = 'block';
+      document.getElementById('show-add-address').style.display = 'none';
+    });
+    document.getElementById('cancel-address').addEventListener('click', () => {
+      document.getElementById('add-address-form').style.display = 'none';
+      document.getElementById('show-add-address').style.display = 'inline-block';
+    });
+
+    document.getElementById('submit-address').addEventListener('click', async () => {
+      const msg  = document.getElementById('address-msg');
+      const body = {
+        label:       document.getElementById('addr-label').value || 'Home',
+        full_name:   document.getElementById('addr-name').value.trim(),
+        phone:       document.getElementById('addr-phone').value.trim(),
+        line1:       document.getElementById('addr-line1').value.trim(),
+        line2:       document.getElementById('addr-line2').value.trim(),
+        city:        document.getElementById('addr-city').value.trim(),
+        state:       document.getElementById('addr-state').value.trim(),
+        postal_code: document.getElementById('addr-postal').value.trim(),
+        country:     'TH',
+        is_default:  document.getElementById('addr-default').checked
+      };
+
+      const res = await fetch(`${API_BASE}/api/users/me/addresses`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (res.ok) {
+        document.getElementById('add-address-form').style.display = 'none';
+        document.getElementById('show-add-address').style.display = 'inline-block';
+        loadAddresses();
+      } else {
+        const d = await res.json();
+        showMsg(msg, d.error || 'Failed to save address', true);
+      }
+    });
+
+    // ── Dark Mode ────────────────────────────────────────────────────────────────
+    function initDarkMode() {
+      const toggle = document.getElementById('dark-mode-toggle');
+      const isDark = localStorage.getItem('darkMode') === 'true';
+      if (isDark) toggle.checked = true;
+
+      toggle.addEventListener('change', () => {
+        const dark = toggle.checked;
+        document.documentElement.classList.toggle('dark', dark);
+        localStorage.setItem('darkMode', dark);
+      });
+    }
+
+    // ── Delete Account ────────────────────────────────────────────────────────────
+    document.getElementById('delete-account').addEventListener('click', async () => {
+      const msg  = document.getElementById('delete-msg');
+      const pass = document.getElementById('delete-pass').value;
+      if (!pass) { showMsg(msg, 'Enter your password to confirm', true); return; }
+      if (!confirm('Are you sure? This CANNOT be undone.')) return;
+
+      const res = await fetch(`${API_BASE}/api/users/me`, {
+        method: 'DELETE', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pass })
+      });
+      if (res.ok) {
+        alert('Your account has been deleted. Goodbye!');
+        window.location.href = 'index.html';
+      } else {
+        const d = await res.json();
+        showMsg(msg, d.error || 'Failed to delete account', true);
+      }
+    });
+
+    // ── Tabs ─────────────────────────────────────────────────────────────────────
+    function initTabs() {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+        });
+      });
+    }
+
+    // ── Utility ──────────────────────────────────────────────────────────────────
+    function showMsg(el, text, isError) {
+      el.textContent = text;
+      el.className = 'msg ' + (isError ? 'error' : 'success');
+      setTimeout(() => { el.className = 'msg'; }, 4000);
+    }
+
+    init();
+  </script>
+</body>
+</html>

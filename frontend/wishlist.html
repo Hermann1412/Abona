@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>My Wishlist — Abona Shop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>if(localStorage.getItem('darkMode')==='true')document.documentElement.classList.add('dark');</script>
+    <link rel="stylesheet" href="styles/shared/general.css">
+    <link rel="stylesheet" href="styles/shared/amazon-header.css">
+    <style>
+      .wishlist-page {
+        max-width: 1100px;
+        margin: 80px auto 40px;
+        padding: 0 20px;
+      }
+      .wishlist-page h1 {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--abona-text);
+      }
+      .wishlist-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 20px;
+      }
+      .wl-card {
+        border: 1px solid var(--abona-border);
+        border-radius: 8px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        background: var(--abona-card);
+        transition: box-shadow 0.15s, background 0.3s, border-color 0.3s;
+      }
+      .wl-card:hover { box-shadow: 0 4px 20px var(--abona-shadow); }
+      .wl-img-wrap {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 160px;
+        margin-bottom: 12px;
+      }
+      .wl-img-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
+      .wl-name {
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.4;
+        margin-bottom: 6px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        color: var(--abona-text);
+      }
+      .wl-name a { text-decoration: none; color: inherit; }
+      .wl-name a:hover { color: #c73060; }
+      .wl-rating {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 8px;
+        font-size: 12px;
+        color: var(--abona-sub);
+      }
+      .wl-rating img { width: 72px; }
+      .wl-price {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 14px;
+        color: var(--abona-rose, #c73060);
+      }
+      .wl-spacer { flex: 1; }
+      .wl-actions { display: flex; gap: 8px; flex-direction: column; }
+      .wl-add-btn {
+        width: 100%;
+        padding: 8px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #c73060, #a8264f);
+        border: 1px solid #8c1e40;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+        color: #fff;
+        transition: all 0.15s;
+      }
+      .wl-add-btn:hover { background: linear-gradient(135deg, #d9406d, #b82f59); }
+      .wl-remove-btn {
+        width: 100%;
+        padding: 7px;
+        border-radius: 20px;
+        background: transparent;
+        border: 1px solid var(--abona-border);
+        font-size: 12px;
+        color: var(--abona-sub);
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 0.15s;
+      }
+      .wl-remove-btn:hover { border-color: #e53935; color: #e53935; }
+      .empty-wishlist {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--abona-sub);
+      }
+      .empty-wishlist .heart { font-size: 48px; margin-bottom: 16px; }
+      .empty-wishlist p { font-size: 16px; margin-bottom: 20px; color: var(--abona-text); }
+      .empty-wishlist a {
+        display: inline-block;
+        padding: 10px 24px;
+        background: linear-gradient(135deg, #c73060, #a8264f);
+        border-radius: 8px;
+        text-decoration: none;
+        color: #fff;
+        font-weight: 600;
+        transition: all 0.15s;
+      }
+      .empty-wishlist a:hover { background: linear-gradient(135deg, #d9406d, #b82f59); }
+      .added-toast {
+        display: none;
+        color: #16a34a;
+        font-size: 12px;
+        text-align: center;
+        margin-top: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="amazon-header">
+      <div class="amazon-header-left-section">
+        <a href="index.html" class="header-link">
+          <img class="amazon-logo" src="images/abona.png" alt="Abona" onerror="this.style.display='none'">
+          <img class="amazon-mobile-logo" src="images/abona.png" alt="Abona" onerror="this.style.display='none'">
+        </a>
+      </div>
+      <div class="amazon-header-middle-section">
+        <input class="search-bar js-search-bar" type="text" placeholder="Search products…">
+        <button class="search-button js-search-button">
+          <img class="search-icon" src="images/icons/search-icon.png">
+        </button>
+      </div>
+      <div class="amazon-header-right-section">
+        <div class="js-auth-section"></div>
+        <a class="orders-link header-link" href="orders.html">
+          <span class="returns-text">Returns</span>
+          <span class="orders-text">&amp; Orders</span>
+        </a>
+        <a class="cart-link header-link" href="checkout.html">
+          <img class="cart-icon" src="images/icons/cart-icon.png">
+          <div class="cart-quantity js-cart-quantity">0</div>
+          <div class="cart-text">Cart</div>
+        </a>
+      </div>
+    </div>
+
+    <div class="wishlist-page">
+      <h1>♥ My Wishlist</h1>
+      <div class="wishlist-grid js-wishlist-grid">
+        <p style="color:#888">Loading...</p>
+      </div>
+    </div>
+
+    <script type="module">
+      import { initAuth, updateCartBadge } from './scripts/auth.js';
+      import { loadCart, addToCart, getCartQuantity } from './data/cart.js';
+      import { formatCurrency } from './scripts/utils/money.js';
+      import { API_BASE } from './scripts/utils/api.js';
+
+      async function init() {
+        const user = await initAuth();
+        await loadCart();
+        updateCartBadge(getCartQuantity());
+
+        if (!user) {
+          window.location.href = 'login.html';
+          return;
+        }
+
+        loadWishlist();
+      }
+
+      async function loadWishlist() {
+        const grid = document.querySelector('.js-wishlist-grid');
+        try {
+          const res = await fetch(`${API_BASE}/api/wishlist`, { credentials: 'include' });
+          if (!res.ok) throw new Error();
+          const items = await res.json();
+
+          if (!items.length) {
+            grid.innerHTML = `
+              <div class="empty-wishlist" style="grid-column:1/-1">
+                <div class="heart">♥</div>
+                <p>Your wishlist is empty.</p>
+                <a href="index.html">Start Shopping</a>
+              </div>`;
+            return;
+          }
+
+          grid.innerHTML = items.map(p => `
+            <div class="wl-card" data-id="${p.id}">
+              <div class="wl-img-wrap">
+                <a href="product.html?id=${p.id}">
+                  <img src="${p.image}" onerror="this.src='images/icons/cart-icon.png'" alt="${p.name}">
+                </a>
+              </div>
+              <div class="wl-name">
+                <a href="product.html?id=${p.id}">${p.name}</a>
+              </div>
+              <div class="wl-rating">
+                ${p.rating_count > 0
+                  ? `<img src="images/ratings/rating-${Math.round(parseFloat(p.stars) * 2) * 5}.png"
+                          onerror="this.style.display='none'">
+                     <span>${p.rating_count.toLocaleString()} reviews</span>`
+                  : `<span>No reviews yet</span>`}
+              </div>
+              <div class="wl-price">฿${formatCurrency(p.price_cents)}</div>
+              <div class="wl-spacer"></div>
+              <div class="wl-actions">
+                <button class="wl-add-btn" data-id="${p.id}">Add to Cart</button>
+                <div class="added-toast" id="toast-${p.id}">✓ Added to cart</div>
+                <button class="wl-remove-btn" data-id="${p.id}">Remove from Wishlist</button>
+              </div>
+            </div>
+          `).join('');
+
+          grid.querySelectorAll('.wl-add-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              btn.disabled = true;
+              await addToCart(btn.dataset.id, 1);
+              btn.disabled = false;
+              updateCartBadge(getCartQuantity());
+              const toast = document.getElementById(`toast-${btn.dataset.id}`);
+              toast.style.display = 'block';
+              setTimeout(() => { toast.style.display = 'none'; }, 2000);
+            });
+          });
+
+          grid.querySelectorAll('.wl-remove-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              await fetch(`${API_BASE}/api/wishlist/${btn.dataset.id}`, {
+                method: 'DELETE',
+                credentials: 'include'
+              });
+              const card = grid.querySelector(`.wl-card[data-id="${btn.dataset.id}"]`);
+              card.style.transition = 'opacity 0.2s';
+              card.style.opacity = '0';
+              setTimeout(() => {
+                card.remove();
+                if (!grid.querySelector('.wl-card')) {
+                  grid.innerHTML = `
+                    <div class="empty-wishlist" style="grid-column:1/-1">
+                      <div class="heart">♥</div>
+                      <p>Your wishlist is empty.</p>
+                      <a href="index.html">Start Shopping</a>
+                    </div>`;
+                }
+              }, 200);
+            });
+          });
+
+        } catch {
+          grid.innerHTML = '<p style="color:#c40000">Failed to load wishlist.</p>';
+        }
+      }
+
+      document.querySelector('.js-search-button').addEventListener('click', () => {
+        const q = document.querySelector('.js-search-bar').value.trim();
+        if (q) window.location.href = `index.html#search:${encodeURIComponent(q)}`;
+      });
+      document.querySelector('.js-search-bar').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.querySelector('.js-search-button').click();
+      });
+
+      init();
+    </script>
+  </body>
+</html>

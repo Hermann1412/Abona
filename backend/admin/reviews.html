@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reviews — Abona Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/assets/admin.css">
+  <style>
+    .filter-tabs { display: flex; gap: 8px; margin-bottom: 0; }
+    .tab-btn {
+      padding: 6px 16px; border-radius: 20px; border: 1px solid #dde1ea;
+      background: #f1f3f7; font-size: 13px; cursor: pointer; font-family: inherit;
+    }
+    .tab-btn.active { background: #5a7af8; color: #fff; border-color: #5a7af8; }
+    .review-row { padding: 16px 0; border-bottom: 1px solid #f0f2f7; }
+    .review-row:last-child { border-bottom: none; }
+    .review-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; flex-wrap: wrap; }
+    .review-user { font-weight: 600; font-size: 14px; }
+    .review-product { font-size: 13px; color: #5a7af8; }
+    .review-stars { color: #f0c14b; font-size: 14px; }
+    .review-date { font-size: 12px; color: #8c95a6; }
+    .review-verified { font-size: 11px; color: #16a34a; font-weight: 600; }
+    .review-title { font-weight: 600; font-size: 14px; margin-bottom: 3px; }
+    .review-body { font-size: 13px; color: #444; line-height: 1.5; margin-bottom: 10px; }
+    .review-actions { display: flex; gap: 8px; }
+    .approve-btn { padding: 5px 14px; background: #22c55e; color: #fff; border: none; border-radius: 5px; font-size: 12px; cursor: pointer; }
+    .approve-btn:hover { background: #16a34a; }
+    .reject-btn  { padding: 5px 14px; background: #f1f3f7; color: #555; border: 1px solid #dde1ea; border-radius: 5px; font-size: 12px; cursor: pointer; }
+    .reject-btn:hover  { background: #fee2e2; color: #c40000; border-color: #fca5a5; }
+    .delete-btn  { padding: 5px 14px; background: transparent; color: #c40000; border: 1px solid #fca5a5; border-radius: 5px; font-size: 12px; cursor: pointer; }
+    .delete-btn:hover  { background: #fee2e2; }
+    .status-badge {
+      padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;
+    }
+    .badge-approved { background: #dcfce7; color: #16a34a; }
+    .badge-pending  { background: #fef9c3; color: #92400e; }
+    .pagination { display: flex; gap: 8px; justify-content: center; margin-top: 20px; }
+    .page-btn { padding: 6px 12px; border: 1px solid #dde1ea; border-radius: 5px; background: #fff; cursor: pointer; font-size: 13px; }
+    .page-btn.active { background: #5a7af8; color: #fff; border-color: #5a7af8; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><h2>Abona Admin</h2><span>Control Panel</span></div>
+      <ul class="sidebar-nav">
+        <li><a href="/admin/dashboard"><span class="icon">📊</span> Dashboard</a></li>
+        <li><a href="/admin/orders"><span class="icon">📦</span> Orders</a></li>
+        <li><a href="/admin/products"><span class="icon">🛍️</span> Products</a></li>
+        <li><a href="/admin/users"><span class="icon">👥</span> Users</a></li>
+        <li><a href="/admin/reviews"><span class="icon">⭐</span> Reviews</a></li>
+        <li><a href="/admin/coupons"><span class="icon">🏷️</span> Coupons</a></li>
+      </ul>
+      <div class="sidebar-footer">
+        <div class="admin-name">Admin</div>
+        <div class="admin-email">Loading...</div>
+        <button class="logout-btn">Sign out</button>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <div class="topbar"><h1>Review Moderation</h1></div>
+      <div class="page-body">
+        <div class="table-card">
+          <div class="table-card-header">
+            <h2 id="reviewCount">Reviews</h2>
+            <div class="filter-tabs">
+              <button class="tab-btn active" data-status="all">All</button>
+              <button class="tab-btn" data-status="pending">Pending</button>
+              <button class="tab-btn" data-status="approved">Approved</button>
+            </div>
+          </div>
+          <div id="reviewsList" style="padding: 0 4px;">
+            <p style="color:#8c95a6;padding:24px 0">Loading...</p>
+          </div>
+          <div class="pagination" id="pagination"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <script src="/admin/assets/admin.js"></script>
+  <script>
+    let currentStatus = 'all';
+    let currentPage   = 1;
+    let totalPages    = 1;
+
+    async function loadReviews() {
+      const res = await fetch(`/admin/api/reviews?status=${currentStatus}&page=${currentPage}`, { credentials: 'include' });
+      if (!res.ok) { showToast('Failed to load reviews', true); return; }
+      const { reviews, total, pages } = await res.json();
+      totalPages = pages;
+
+      document.getElementById('reviewCount').textContent =
+        `${total} Review${total !== 1 ? 's' : ''}`;
+
+      const list = document.getElementById('reviewsList');
+      if (!reviews.length) {
+        list.innerHTML = '<p style="color:#8c95a6;padding:24px 0">No reviews found.</p>';
+        renderPagination();
+        return;
+      }
+
+      list.innerHTML = reviews.map(r => {
+        const stars = '★'.repeat(r.stars) + '☆'.repeat(5 - r.stars);
+        const date  = new Date(r.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+        const badge = r.is_approved
+          ? '<span class="status-badge badge-approved">Approved</span>'
+          : '<span class="status-badge badge-pending">Pending</span>';
+
+        return `
+          <div class="review-row" data-id="${r.id}" data-approved="${r.is_approved}">
+            <div class="review-meta">
+              <span class="review-user">${r.user_name}</span>
+              <span class="review-stars">${stars}</span>
+              <span class="review-product">on: ${r.product_name}</span>
+              ${r.is_verified ? '<span class="review-verified">✓ Verified</span>' : ''}
+              <span class="review-date">${date}</span>
+              ${badge}
+            </div>
+            ${r.title ? `<div class="review-title">${r.title}</div>` : ''}
+            ${r.body  ? `<div class="review-body">${r.body}</div>`   : '<div class="review-body" style="color:#aaa;font-style:italic">No text</div>'}
+            <div class="review-actions">
+              ${!r.is_approved
+                ? `<button class="approve-btn" data-id="${r.id}">✓ Approve</button>`
+                : `<button class="reject-btn"  data-id="${r.id}">✗ Unapprove</button>`
+              }
+              <button class="delete-btn" data-id="${r.id}">Delete</button>
+            </div>
+          </div>`;
+      }).join('');
+
+      list.querySelectorAll('.approve-btn').forEach(btn => {
+        btn.addEventListener('click', () => moderateReview(btn.dataset.id, true));
+      });
+      list.querySelectorAll('.reject-btn').forEach(btn => {
+        btn.addEventListener('click', () => moderateReview(btn.dataset.id, false));
+      });
+      list.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => deleteReview(btn.dataset.id));
+      });
+
+      renderPagination();
+    }
+
+    async function moderateReview(id, approve) {
+      const res = await fetch(`/admin/api/reviews/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ is_approved: approve })
+      });
+      if (res.ok) {
+        showToast(approve ? 'Review approved' : 'Review unapproved');
+        loadReviews();
+      } else {
+        showToast('Failed', true);
+      }
+    }
+
+    async function deleteReview(id) {
+      if (!confirm('Delete this review permanently?')) return;
+      const res = await fetch(`/admin/api/reviews/${id}`, {
+        method: 'DELETE', credentials: 'include'
+      });
+      if (res.ok) { showToast('Review deleted'); loadReviews(); }
+      else showToast('Failed to delete', true);
+    }
+
+    function renderPagination() {
+      const pg = document.getElementById('pagination');
+      if (totalPages <= 1) { pg.innerHTML = ''; return; }
+      pg.innerHTML = Array.from({ length: totalPages }, (_, i) => i + 1).map(p =>
+        `<button class="page-btn ${p === currentPage ? 'active' : ''}" data-page="${p}">${p}</button>`
+      ).join('');
+      pg.querySelectorAll('.page-btn').forEach(btn => {
+        btn.addEventListener('click', () => { currentPage = Number(btn.dataset.page); loadReviews(); });
+      });
+    }
+
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentStatus = btn.dataset.status;
+        currentPage   = 1;
+        loadReviews();
+      });
+    });
+
+    guardAdmin().then(admin => { if (admin) loadReviews(); });
+  </script>
+</body>
+</html>

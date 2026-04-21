@@ -1,0 +1,124 @@
+/* ═══════════════════════════════════════════════════════════
+   Abona Shop — Checkout Header
+   ═══════════════════════════════════════════════════════════ */
+
+.checkout-header {
+  height: 72px;
+  padding-left: 30px;
+  padding-right: 30px;
+  background: #ffffff;
+  border-bottom: 2px solid #c73060;
+  box-shadow: 0 2px 12px rgba(30,16,64,0.10);
+
+  display: flex;
+  justify-content: center;
+
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+html.dark .checkout-header {
+  background: #161028;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.5);
+  border-bottom-color: #c73060;
+}
+
+.header-content {
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  align-items: center;
+}
+
+.checkout-header-left-section {
+  width: 200px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.amazon-logo {
+  height: 58px;
+  width: auto;
+  max-width: 190px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.amazon-mobile-logo {
+  display: none;
+}
+
+@media (max-width: 575px) {
+  .checkout-header-left-section {
+    width: auto;
+  }
+
+  .amazon-logo {
+    display: none;
+  }
+
+  .amazon-mobile-logo {
+    display: inline-block;
+    height: 44px;
+    width: auto;
+    object-fit: contain;
+  }
+}
+
+.checkout-header-middle-section {
+  flex: 1;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 600;
+  display: flex;
+  justify-content: center;
+  color: #1e1a2e;
+}
+
+html.dark .checkout-header-middle-section { color: #f0eaf8; }
+
+.return-to-home-link {
+  color: #c73060;
+  font-size: 20px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.return-to-home-link:hover { color: #a8264f; }
+
+@media (max-width: 1000px) {
+  .checkout-header-middle-section {
+    font-size: 18px;
+    margin-right: 60px;
+  }
+
+  .return-to-home-link {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 575px) {
+  .checkout-header-middle-section {
+    margin-right: 5px;
+  }
+}
+
+.checkout-header-right-section {
+  text-align: right;
+  width: 150px;
+  flex-shrink: 0;
+  color: #6b6880;
+  font-size: 13px;
+}
+
+html.dark .checkout-header-right-section { color: #c8b8e8; }
+
+@media (max-width: 1000px) {
+  .checkout-header-right-section {
+    width: auto;
+  }
+}

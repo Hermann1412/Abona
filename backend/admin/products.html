@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Products — Abona Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/assets/admin.css">
+  <style>
+    .edit-input {
+      width: 90px;
+      padding: 5px 8px;
+      border: 1px solid #dde1ea;
+      border-radius: 5px;
+      font-size: 13px;
+    }
+    .save-btn {
+      padding: 5px 10px;
+      background: #5a7af8;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-left: 6px;
+    }
+    .save-btn:hover { background: #4566e0; }
+    .add-btn { padding: 8px 16px; background: #22c55e; color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500; }
+    .add-btn:hover { background: #16a34a; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #fff; border-radius: 10px; padding: 28px; width: 480px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
+    .modal h2 { margin: 0 0 20px; font-size: 18px; color: #1a1d2e; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 5px; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 8px 10px; border: 1px solid #dde1ea; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+    .form-group textarea { height: 80px; resize: vertical; }
+    .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    .cancel-btn { padding: 8px 16px; background: #f1f3f7; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+    .submit-btn { padding: 8px 16px; background: #5a7af8; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; }
+    .submit-btn:hover { background: #4566e0; }
+    .img-btn { padding: 5px 10px; background: #f1f3f7; border: 1px solid #dde1ea; border-radius: 5px; font-size: 12px; cursor: pointer; margin-left: 4px; }
+    .img-btn:hover { background: #e0e4f0; }
+    /* Gallery modal */
+    .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+    .gallery-thumb-wrap { position: relative; border: 1px solid #dde1ea; border-radius: 6px; overflow: hidden; background: #f7f8fc; aspect-ratio: 1; }
+    .gallery-thumb-wrap img { width: 100%; height: 100%; object-fit: contain; padding: 6px; box-sizing: border-box; }
+    .thumb-del { position: absolute; top: 4px; right: 4px; background: rgba(255,255,255,0.9); border: 1px solid #fca5a5; color: #c40000; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .thumb-del:hover { background: #fee2e2; }
+    .upload-zone { border: 2px dashed #dde1ea; border-radius: 8px; padding: 20px; text-align: center; color: #8c95a6; font-size: 13px; cursor: pointer; transition: border-color 0.15s; }
+    .upload-zone:hover { border-color: #5a7af8; color: #5a7af8; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><h2>Abona Admin</h2><span>Control Panel</span></div>
+      <ul class="sidebar-nav">
+        <li><a href="/admin/dashboard"><span class="icon">📊</span> Dashboard</a></li>
+        <li><a href="/admin/orders"><span class="icon">📦</span> Orders</a></li>
+        <li><a href="/admin/products"><span class="icon">🛍️</span> Products</a></li>
+        <li><a href="/admin/users"><span class="icon">👥</span> Users</a></li>
+      </ul>
+      <div class="sidebar-footer">
+        <div class="admin-name">Admin</div>
+        <div class="admin-email">Loading...</div>
+        <button class="logout-btn">Sign out</button>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <div class="topbar"><h1>Products</h1></div>
+      <div class="page-body">
+        <div class="table-card">
+          <div class="table-card-header">
+            <h2 id="productCount">Products</h2>
+            <div class="filter-row">
+              <input type="text" id="searchInput" placeholder="Search products…" style="width:220px">
+              <button class="add-btn" id="openAddModal">+ Add Product</button>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Rating</th>
+                <th>Reviews</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="productsBody">
+              <tr><td colspan="7" class="empty-state">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Product Modal -->
+  <div class="modal-overlay" id="addModal">
+    <div class="modal">
+      <h2>Add New Product</h2>
+      <div class="form-group">
+        <label>Product Name *</label>
+        <input type="text" id="newName" placeholder="e.g. Blue Running Shoes">
+      </div>
+      <div class="form-group">
+        <label>Price (in satang) * — e.g. 2999 = ฿29.99</label>
+        <input type="number" id="newPrice" placeholder="2999" min="1">
+      </div>
+      <div class="form-group">
+        <label>Product Image</label>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+          <input type="file" id="newImageFile" accept="image/*" style="flex:1;padding:6px">
+          <span style="font-size:12px;color:#8c95a6">or paste URL:</span>
+        </div>
+        <input type="text" id="newImage" placeholder="https://... or leave empty if uploading file">
+        <div id="imagePreview" style="margin-top:8px;display:none">
+          <img id="previewImg" style="max-width:120px;max-height:120px;border-radius:6px;border:1px solid #dde1ea" alt="Preview">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="newDesc" placeholder="Product description..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Type</label>
+        <select id="newType">
+          <option value="">— None —</option>
+          <option value="clothing">Clothing</option>
+          <option value="electronics">Electronics</option>
+          <option value="kitchen">Kitchen</option>
+          <option value="sports">Sports</option>
+          <option value="toys">Toys</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Stock <span style="font-weight:400;color:#8c95a6">(-1 = unlimited)</span></label>
+        <input type="number" id="newStock" value="-1" min="-1">
+      </div>
+      <div class="form-group">
+        <label>Keywords (comma separated)</label>
+        <input type="text" id="newKeywords" placeholder="shoes, running, sport">
+      </div>
+      <div id="addError" style="color:#c40000;font-size:13px;margin-top:4px"></div>
+      <div class="modal-footer">
+        <button class="cancel-btn" id="closeAddModal">Cancel</button>
+        <button class="submit-btn" id="submitProduct">Add Product</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image Gallery Modal -->
+  <div class="modal-overlay" id="galleryModal">
+    <div class="modal" style="width:540px">
+      <h2 id="galleryTitle">Product Images</h2>
+      <div class="gallery-grid" id="galleryGrid"></div>
+
+      <div style="margin-bottom:12px">
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="galleryFileInput" accept="image/*" multiple style="display:none">
+          <div>📷 Click to upload image(s) or drag &amp; drop</div>
+          <div style="font-size:11px;margin-top:4px">JPG, PNG, WEBP — max 5MB each</div>
+        </div>
+      </div>
+
+      <div id="galleryError" style="color:#c40000;font-size:13px;margin-bottom:8px"></div>
+      <div class="modal-footer">
+        <button class="cancel-btn" id="closeGallery">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <script src="/admin/assets/admin.js"></script>
+  <script>
+    let allProducts = [];
+
+    async function loadProducts() {
+      const res = await fetch('/admin/api/products', { credentials: 'include' });
+      if (!res.ok) { showToast('Failed to load products', true); return; }
+
+      allProducts = await res.json();
+      renderProducts(allProducts);
+    }
+
+    function renderProducts(products) {
+      document.getElementById('productCount').textContent =
+        `${products.length} Product${products.length !== 1 ? 's' : ''}`;
+
+      const tbody = document.getElementById('productsBody');
+      if (!products.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No products found</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = products.map(p => {
+        const stockVal = p.stock ?? -1;
+        const stockLabel = stockVal < 0
+          ? '<span style="color:#8c95a6;font-size:12px">Unlimited</span>'
+          : stockVal === 0
+            ? '<span style="color:#c40000;font-weight:600;font-size:12px">Out of Stock</span>'
+            : stockVal <= 5
+              ? `<span style="color:#e68a00;font-weight:600;font-size:12px">Low (${stockVal})</span>`
+              : `<span style="color:#16a34a;font-size:12px">${stockVal}</span>`;
+        return `
+        <tr data-id="${p.id}">
+          <td><img class="product-thumb" src="/${p.image}" onerror="this.src='/admin/assets/placeholder.png'" alt=""></td>
+          <td style="max-width:220px">
+            <div style="font-weight:500;line-height:1.3">${p.name}</div>
+            <div style="color:#8c95a6;font-size:11px;margin-top:2px">${p.id.slice(0,12)}…</div>
+          </td>
+          <td>${formatCurrency(p.price_cents)}</td>
+          <td>${stockLabel}</td>
+          <td>⭐ ${parseFloat(p.stars).toFixed(1)}</td>
+          <td>${p.rating_count.toLocaleString()}</td>
+          <td style="white-space:nowrap">
+            <input class="edit-input" type="number" min="1" value="${p.price_cents}" data-original="${p.price_cents}" style="width:70px" title="Price (satang)">
+            <input class="edit-input stock-input" type="number" min="-1" value="${stockVal}" style="width:55px;margin-left:4px" title="Stock (-1=unlimited)">
+            <button class="save-btn" data-id="${p.id}">Save</button>
+            <button class="img-btn" data-id="${p.id}" data-name="${p.name.slice(0,30)}">🖼 Images</button>
+          </td>
+        </tr>`;
+      }).join('');
+
+      tbody.querySelectorAll('.save-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const row       = btn.closest('tr');
+          const priceInput = row.querySelector('.edit-input:not(.stock-input)');
+          const stockInput = row.querySelector('.stock-input');
+          const price     = parseInt(priceInput.value);
+          const stock     = parseInt(stockInput.value);
+          const productId = btn.dataset.id;
+
+          if (isNaN(price) || price < 1) { showToast('Enter a valid price', true); return; }
+          if (isNaN(stock) || stock < -1) { showToast('Stock must be -1 or more', true); return; }
+
+          const res = await fetch(`/admin/api/products/${productId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ price_cents: price, stock })
+          });
+
+          if (res.ok) {
+            showToast('Product updated');
+            const p = allProducts.find(x => x.id === productId);
+            if (p) { p.price_cents = price; p.stock = stock; }
+            renderProducts(allProducts);
+          } else {
+            showToast('Failed to update', true);
+          }
+        });
+      });
+    }
+
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase();
+      renderProducts(allProducts.filter(p => p.name.toLowerCase().includes(q)));
+    });
+
+    // Modal logic
+    // Image preview when file selected
+    document.getElementById('newImageFile').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        document.getElementById('previewImg').src = ev.target.result;
+        document.getElementById('imagePreview').style.display = 'block';
+        document.getElementById('newImage').value = '';
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('newImage').addEventListener('input', (e) => {
+      if (e.target.value) {
+        document.getElementById('previewImg').src = e.target.value;
+        document.getElementById('imagePreview').style.display = 'block';
+        document.getElementById('newImageFile').value = '';
+      }
+    });
+
+    document.getElementById('openAddModal').addEventListener('click', () => {
+      document.getElementById('addModal').classList.add('open');
+    });
+    document.getElementById('closeAddModal').addEventListener('click', () => {
+      document.getElementById('addModal').classList.remove('open');
+      document.getElementById('addError').textContent = '';
+      document.getElementById('imagePreview').style.display = 'none';
+    });
+    document.getElementById('addModal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('addModal'))
+        document.getElementById('addModal').classList.remove('open');
+    });
+
+    document.getElementById('submitProduct').addEventListener('click', async () => {
+      const name        = document.getElementById('newName').value.trim();
+      const price_cents = parseInt(document.getElementById('newPrice').value);
+      const imageUrl    = document.getElementById('newImage').value.trim();
+      const imageFile   = document.getElementById('newImageFile').files[0];
+      const description = document.getElementById('newDesc').value.trim();
+      const type        = document.getElementById('newType').value;
+      const stock       = parseInt(document.getElementById('newStock').value ?? '-1');
+      const keywords    = document.getElementById('newKeywords').value.trim();
+      const errEl       = document.getElementById('addError');
+
+      if (!name || !price_cents || price_cents < 1) {
+        errEl.textContent = 'Name and a valid price are required.';
+        return;
+      }
+
+      const btn = document.getElementById('submitProduct');
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+
+      let image = imageUrl;
+
+      // Upload file if provided
+      if (imageFile) {
+        const fd = new FormData();
+        fd.append('image', imageFile);
+        const upRes = await fetch('/api/uploads/product', {
+          method: 'POST',
+          credentials: 'include',
+          body: fd
+        });
+        if (!upRes.ok) {
+          errEl.textContent = 'Image upload failed.';
+          btn.disabled = false;
+          btn.textContent = 'Add Product';
+          return;
+        }
+        const upData = await upRes.json();
+        image = upData.url;
+      }
+
+      const res = await fetch('/admin/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ name, price_cents, image, description, type, stock, keywords })
+      });
+
+      btn.disabled = false;
+      btn.textContent = 'Add Product';
+
+      if (res.ok) {
+        document.getElementById('addModal').classList.remove('open');
+        ['newName','newPrice','newImage','newDesc','newKeywords'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('newType').value = '';
+        document.getElementById('newImageFile').value = '';
+        document.getElementById('imagePreview').style.display = 'none';
+        showToast('Product added successfully!');
+        loadProducts();
+      } else {
+        const data = await res.json();
+        errEl.textContent = data.error || 'Failed to add product.';
+      }
+    });
+
+    // ── Image gallery ──────────────────────────────────────────────────────────
+    let galleryProductId = null;
+
+    async function openGallery(productId, productName) {
+      galleryProductId = productId;
+      document.getElementById('galleryTitle').textContent = `Images — ${productName}`;
+      document.getElementById('galleryError').textContent = '';
+      document.getElementById('galleryModal').classList.add('open');
+      await refreshGallery();
+    }
+
+    async function refreshGallery() {
+      const res = await fetch(`/api/products/${galleryProductId}`);
+      const product = await res.json();
+      const images  = product.images || [];
+      const grid    = document.getElementById('galleryGrid');
+
+      if (!images.length) {
+        grid.innerHTML = '<p style="color:#8c95a6;font-size:13px;grid-column:1/-1">No extra images yet. Upload below.</p>';
+        return;
+      }
+
+      grid.innerHTML = images.map(img => `
+        <div class="gallery-thumb-wrap">
+          <img src="${img.url.startsWith('/uploads') ? img.url : '/' + img.url}" alt="${img.alt_text || ''}">
+          <button class="thumb-del" data-id="${img.id || ''}" data-url="${img.url}" title="Remove">✕</button>
+          ${img.is_primary ? '<div style="position:absolute;bottom:4px;left:4px;background:#f0c14b;font-size:10px;padding:1px 5px;border-radius:3px;font-weight:600">Main</div>' : ''}
+        </div>`).join('');
+
+      grid.querySelectorAll('.thumb-del').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!btn.dataset.id) return;
+          await fetch(`/admin/api/products/${galleryProductId}/images/${btn.dataset.id}`, {
+            method: 'DELETE', credentials: 'include'
+          });
+          await refreshGallery();
+          showToast('Image removed');
+        });
+      });
+    }
+
+    document.getElementById('uploadZone').addEventListener('click', () =>
+      document.getElementById('galleryFileInput').click());
+
+    document.getElementById('uploadZone').addEventListener('dragover', e => {
+      e.preventDefault();
+      document.getElementById('uploadZone').style.borderColor = '#5a7af8';
+    });
+    document.getElementById('uploadZone').addEventListener('dragleave', () =>
+      document.getElementById('uploadZone').style.borderColor = '');
+    document.getElementById('uploadZone').addEventListener('drop', async (e) => {
+      e.preventDefault();
+      document.getElementById('uploadZone').style.borderColor = '';
+      await uploadFiles(e.dataTransfer.files);
+    });
+
+    document.getElementById('galleryFileInput').addEventListener('change', async (e) => {
+      await uploadFiles(e.target.files);
+      e.target.value = '';
+    });
+
+    async function uploadFiles(files) {
+      const errEl = document.getElementById('galleryError');
+      errEl.textContent = '';
+      for (const file of files) {
+        const fd = new FormData();
+        fd.append('image', file);
+        const upRes = await fetch('/api/uploads/product', {
+          method: 'POST', credentials: 'include', body: fd
+        });
+        if (!upRes.ok) { errEl.textContent = 'Upload failed for ' + file.name; continue; }
+        const { url } = await upRes.json();
+        await fetch(`/admin/api/products/${galleryProductId}/images`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ url, alt_text: file.name.replace(/\.[^.]+$/, ''), is_primary: false })
+        });
+      }
+      await refreshGallery();
+      showToast('Images uploaded!');
+    }
+
+    document.getElementById('closeGallery').addEventListener('click', () =>
+      document.getElementById('galleryModal').classList.remove('open'));
+    document.getElementById('galleryModal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('galleryModal'))
+        document.getElementById('galleryModal').classList.remove('open');
+    });
+
+    // Wire img-btn clicks (delegated after render)
+    document.getElementById('productsBody').addEventListener('click', (e) => {
+      const btn = e.target.closest('.img-btn');
+      if (btn) openGallery(btn.dataset.id, btn.dataset.name);
+    });
+
+    guardAdmin().then(admin => { if (admin) loadProducts(); });
+  </script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Users — Abona Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/assets/admin.css">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><h2>Abona Admin</h2><span>Control Panel</span></div>
+      <ul class="sidebar-nav">
+        <li><a href="/admin/dashboard"><span class="icon">📊</span> Dashboard</a></li>
+        <li><a href="/admin/orders"><span class="icon">📦</span> Orders</a></li>
+        <li><a href="/admin/products"><span class="icon">🛍️</span> Products</a></li>
+        <li><a href="/admin/users"><span class="icon">👥</span> Users</a></li>
+      </ul>
+      <div class="sidebar-footer">
+        <div class="admin-name">Admin</div>
+        <div class="admin-email">Loading...</div>
+        <button class="logout-btn">Sign out</button>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <div class="topbar"><h1>Users</h1></div>
+      <div class="page-body">
+        <div class="table-card">
+          <div class="table-card-header">
+            <h2 id="userCount">Users</h2>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Joined</th>
+                <th>Change Role</th>
+              </tr>
+            </thead>
+            <tbody id="usersBody">
+              <tr><td colspan="6" class="empty-state">Loading...</td></tr>
+            </tbody>
+          </table>
+
+          <div class="pagination">
+            <span id="pageInfo"></span>
+            <button id="prevBtn" disabled>← Prev</button>
+            <button id="nextBtn" disabled>Next →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <script src="/admin/assets/admin.js"></script>
+  <script>
+    let currentPage = 1;
+    let totalPages  = 1;
+    let currentAdminId = null;
+
+    async function loadUsers() {
+      const res = await fetch(`/admin/api/users?page=${currentPage}`, { credentials: 'include' });
+      if (!res.ok) { showToast('Failed to load users', true); return; }
+
+      const { users, total, pages } = await res.json();
+      totalPages = pages || 1;
+
+      document.getElementById('userCount').textContent =
+        `${total} User${total !== 1 ? 's' : ''}`;
+      document.getElementById('pageInfo').textContent =
+        `Page ${currentPage} of ${totalPages}`;
+      document.getElementById('prevBtn').disabled = currentPage <= 1;
+      document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+
+      const tbody = document.getElementById('usersBody');
+      if (!users.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No users found</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = users.map(u => `
+        <tr data-id="${u.id}">
+          <td style="color:#8c95a6;font-size:12px">#${u.id}</td>
+          <td style="font-weight:500">${u.name}</td>
+          <td>${u.email}</td>
+          <td>${u.role === 'admin'
+            ? '<span class="badge badge-admin">admin</span>'
+            : '<span class="badge badge-user">user</span>'}</td>
+          <td>${formatDate(u.created_at)}</td>
+          <td>
+            ${u.id === currentAdminId
+              ? '<span style="font-size:12px;color:#8c95a6">You</span>'
+              : `<select class="status-select role-select" data-user-id="${u.id}" data-current="${u.role}">
+                   <option value="user"  ${u.role==='user'  ? 'selected':''}>User</option>
+                   <option value="admin" ${u.role==='admin' ? 'selected':''}>Admin</option>
+                 </select>`
+            }
+          </td>
+        </tr>
+      `).join('');
+
+      tbody.querySelectorAll('.role-select').forEach(sel => {
+        sel.addEventListener('change', async () => {
+          const userId = sel.dataset.userId;
+          const role   = sel.value;
+
+          if (!confirm(`Change this user's role to "${role}"?`)) {
+            sel.value = sel.dataset.current;
+            return;
+          }
+
+          const res = await fetch(`/admin/api/users/${userId}/role`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ role })
+          });
+
+          if (res.ok) {
+            showToast(`Role changed to "${role}"`);
+            sel.dataset.current = role;
+            const badge = sel.closest('tr').querySelector('.badge');
+            badge.className = `badge badge-${role}`;
+            badge.textContent = role;
+          } else {
+            const data = await res.json();
+            showToast(data.error || 'Failed to update role', true);
+            sel.value = sel.dataset.current;
+          }
+        });
+      });
+    }
+
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      if (currentPage > 1) { currentPage--; loadUsers(); }
+    });
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      if (currentPage < totalPages) { currentPage++; loadUsers(); }
+    });
+
+    guardAdmin().then(admin => {
+      if (admin) {
+        currentAdminId = admin.id;
+        loadUsers();
+      }
+    });
+  </script>
+</body>
+</html>

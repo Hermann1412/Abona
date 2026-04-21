@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>Your Orders — Abona Shop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>if(localStorage.getItem('darkMode')==='true')document.documentElement.classList.add('dark');</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/shared/general.css">
+    <link rel="stylesheet" href="styles/shared/amazon-header.css">
+    <link rel="stylesheet" href="styles/pages/orders.css">
+  </head>
+  <body>
+    <div class="amazon-header">
+      <div class="amazon-header-left-section">
+        <a href="index.html" class="header-link">
+          <img class="amazon-logo" src="images/abona.png" alt="Abona" onerror="this.style.display='none'">
+          <img class="amazon-mobile-logo" src="images/abona.png" alt="Abona" onerror="this.style.display='none'">
+        </a>
+      </div>
+      <div class="amazon-header-middle-section">
+        <input class="search-bar" type="text" placeholder="Search">
+        <button class="search-button">
+          <img class="search-icon" src="images/icons/search-icon.png">
+        </button>
+      </div>
+      <div class="amazon-header-right-section">
+        <div class="js-auth-section"></div>
+        <a class="orders-link header-link" href="orders.html">
+          <span class="returns-text">Returns</span>
+          <span class="orders-text">&amp; Orders</span>
+        </a>
+        <a class="cart-link header-link" href="checkout.html">
+          <img class="cart-icon" src="images/icons/cart-icon.png">
+          <div class="cart-quantity js-cart-quantity">0</div>
+          <div class="cart-text">Cart</div>
+        </a>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="page-title">Your Orders</div>
+      <div id="placed-banner" style="display:none;background:#d4edda;border:1px solid #c3e6cb;border-radius:6px;padding:14px 20px;margin-bottom:24px;color:#155724;font-size:14px">
+        ✅ Your order was placed successfully! A confirmation email has been sent to you.
+      </div>
+      <div class="orders-grid js-orders-grid">
+        <p style="color:#666">Loading your orders…</p>
+      </div>
+    </div>
+
+    <script type="module">
+      import { initAuth, requireAuth, updateCartBadge } from './scripts/auth.js';
+      import { loadCart, getCartQuantity } from './data/cart.js';
+      import { API_BASE } from './scripts/utils/api.js';
+
+      function fmt(cents) { return '฿' + (cents / 100).toLocaleString('th-TH', { minimumFractionDigits: 2 }); }
+
+      function formatDate(iso) {
+        return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      }
+
+      function statusLabel(status) {
+        const map = {
+          pending: '⏳ Order Received',
+          paid: '✅ Payment Confirmed',
+          shipped: '🚚 Shipped',
+          delivered: '📦 Delivered',
+          cancelled: '❌ Cancelled'
+        };
+        return map[status] || status;
+      }
+
+      function renderOrders(orders) {
+        const grid = document.querySelector('.js-orders-grid');
+
+        if (!orders.length) {
+          grid.innerHTML = `
+            <div style="text-align:center;padding:48px;color:#666">
+              <p style="font-size:18px;margin-bottom:16px">You haven't placed any orders yet.</p>
+              <a href="index.html" class="button-primary" style="text-decoration:none;padding:10px 20px;border-radius:4px">
+                Start shopping
+              </a>
+            </div>`;
+          return;
+        }
+
+        grid.innerHTML = orders.map(order => {
+          const items = order.items || [];
+          const itemsHTML = items.map(item => `
+            <div class="product-image-container">
+              <img src="${item.product_image}" alt="${item.product_name}" onerror="this.style.display='none'">
+            </div>
+            <div class="product-details">
+              <div class="product-name">${item.product_name}</div>
+              <div class="product-delivery-date">${statusLabel(order.status)}</div>
+              <div class="product-quantity">Quantity: ${item.quantity}</div>
+              <button class="buy-again-button button-primary js-buy-again"
+                data-product-id="${item.product_id}" style="margin-top:8px">
+                <img class="buy-again-icon" src="images/icons/buy-again.png" onerror="this.style.display='none'">
+                <span class="buy-again-message">Buy it again</span>
+              </button>
+            </div>
+            <div class="product-actions">
+              <a href="tracking.html?orderId=${order.id}&itemId=${item.id}">
+                <button class="track-package-button button-secondary">Track package</button>
+              </a>
+            </div>
+          `).join('');
+
+          const canCancel = ['pending', 'paid'].includes(order.status);
+          return `
+            <div class="order-container">
+              <div class="order-header">
+                <div class="order-header-left-section">
+                  <div class="order-date">
+                    <div class="order-header-label">Order Placed:</div>
+                    <div>${formatDate(order.created_at)}</div>
+                  </div>
+                  <div class="order-total">
+                    <div class="order-header-label">Total:</div>
+                    <div>${fmt(order.total_cents)}</div>
+                  </div>
+                </div>
+                <div class="order-header-right-section" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+                  <div>
+                    <div class="order-header-label">Order ID:</div>
+                    <div style="font-family:monospace;font-size:12px;color:#555">${order.id.slice(0,8).toUpperCase()}…
+                      <button onclick="copyOrderId('${order.id}', this)"
+                        style="background:none;border:none;color:#0066c0;font-size:12px;cursor:pointer;padding:0 0 0 4px">
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+                  ${canCancel ? `
+                    <button class="js-cancel-order button-secondary"
+                      data-order-id="${order.id}"
+                      style="font-size:12px;padding:6px 12px;color:#c40000;border-color:#fca5a5">
+                      Cancel Order
+                    </button>` : ''}
+                </div>
+              </div>
+              <div class="order-details-grid">${itemsHTML}</div>
+            </div>`;
+        }).join('');
+
+        // Buy again
+        grid.querySelectorAll('.js-buy-again').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const { addToCart } = await import('./data/cart.js');
+            await addToCart(btn.dataset.productId, 1);
+            window.location.href = 'checkout.html';
+          });
+        });
+
+        // Cancel order
+        grid.querySelectorAll('.js-cancel-order').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to cancel this order? This cannot be undone.')) return;
+            btn.disabled = true;
+            btn.textContent = 'Cancelling…';
+            try {
+              const res = await fetch(`${API_BASE}/api/orders/${btn.dataset.orderId}/cancel`, {
+                method: 'PATCH', credentials: 'include'
+              });
+              if (res.ok) {
+                await loadOrders();
+              } else {
+                const d = await res.json();
+                alert(d.error || 'Could not cancel order.');
+                btn.disabled = false;
+                btn.textContent = 'Cancel Order';
+              }
+            } catch {
+              alert('Network error.');
+              btn.disabled = false;
+              btn.textContent = 'Cancel Order';
+            }
+          });
+        });
+      }
+
+      window.copyOrderId = function(id, btn) {
+        navigator.clipboard.writeText(id).then(() => {
+          const orig = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(() => { btn.textContent = orig; }, 1500);
+        });
+      };
+
+      async function loadOrders() {
+        try {
+          const res = await fetch(`${API_BASE}/api/orders`, { credentials: 'include' });
+          if (!res.ok) throw new Error();
+          const orders = await res.json();
+
+          // Fetch items for each order
+          const detailed = await Promise.all(orders.map(async order => {
+            const r = await fetch(`${API_BASE}/api/orders/${order.id}`, { credentials: 'include' });
+            return r.ok ? r.json() : order;
+          }));
+
+          renderOrders(detailed);
+        } catch {
+          document.querySelector('.js-orders-grid').innerHTML =
+            '<p style="color:#c40000">Failed to load orders. Make sure the server is running.</p>';
+        }
+      }
+
+      async function init() {
+        const user = await initAuth();
+        if (!requireAuth()) return;
+
+        await loadCart();
+        updateCartBadge(getCartQuantity());
+
+        // Show success banner if redirected from checkout
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('placed')) {
+          document.getElementById('placed-banner').style.display = 'block';
+        }
+
+        await loadOrders();
+      }
+
+      init();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>Track Your Order — Abona Shop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>if(localStorage.getItem('darkMode')==='true')document.documentElement.classList.add('dark');</script>
+    <link rel="stylesheet" href="styles/shared/general.css">
+    <link rel="stylesheet" href="styles/shared/amazon-header.css">
+    <style>
+      .tracking-page {
+        max-width: 720px;
+        margin: 90px auto 60px;
+        padding: 0 20px;
+      }
+
+      .tracking-page h1 {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 6px;
+        color: var(--abona-text);
+      }
+
+      .tracking-page .subtitle {
+        font-size: 14px;
+        color: var(--abona-sub);
+        margin-bottom: 28px;
+      }
+
+      .tracking-card {
+        background: var(--abona-card);
+        border: 1px solid var(--abona-border);
+        border-radius: 10px;
+        padding: 28px;
+        margin-bottom: 20px;
+        transition: background 0.3s, border-color 0.3s;
+      }
+
+      /* Status timeline */
+      .status-timeline {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        position: relative;
+        margin: 28px 0;
+      }
+
+      .status-timeline::before {
+        content: '';
+        position: absolute;
+        top: 18px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--abona-border);
+        z-index: 0;
+      }
+
+      .status-progress-line {
+        position: absolute;
+        top: 18px;
+        left: 0;
+        height: 3px;
+        background: #c73060;
+        z-index: 1;
+        transition: width 0.6s ease;
+      }
+
+      .timeline-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        z-index: 2;
+        flex: 1;
+      }
+
+      .step-dot {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--abona-border);
+        border: 3px solid var(--abona-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        margin-bottom: 8px;
+        transition: background 0.3s, border-color 0.3s;
+      }
+
+      .step-dot.done    { background: #c73060; border-color: #c73060; }
+      .step-dot.current { background: var(--abona-card); border-color: #c73060; box-shadow: 0 0 0 4px rgba(199,48,96,0.2); }
+      .step-dot.cancelled { background: #fee2e2; border-color: #fca5a5; }
+
+      .step-label {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--abona-sub);
+        text-align: center;
+      }
+      .step-label.active { color: var(--abona-text); font-weight: 700; }
+
+      .step-date {
+        font-size: 11px;
+        color: var(--abona-sub);
+        text-align: center;
+        margin-top: 2px;
+      }
+
+      /* Order info */
+      .order-meta {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--abona-border);
+      }
+
+      .meta-item { font-size: 13px; color: var(--abona-text); }
+      .meta-item .label { color: var(--abona-sub); margin-bottom: 2px; }
+      .meta-item .value { font-weight: 600; }
+
+      .status-pill {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .pill-pending   { background: #fef9c3; color: #92400e; }
+      .pill-paid      { background: #dbeafe; color: #1e40af; }
+      .pill-shipped   { background: #e0f2fe; color: #0369a1; }
+      .pill-delivered { background: #dcfce7; color: #16a34a; }
+      .pill-cancelled { background: #fee2e2; color: #c40000; }
+
+      /* Items */
+      .order-items { margin-top: 20px; }
+      .order-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--abona-border);
+      }
+      .order-item:last-child { border-bottom: none; }
+      .order-item img {
+        width: 64px;
+        height: 64px;
+        object-fit: contain;
+        border: 1px solid var(--abona-border);
+        border-radius: 6px;
+        background: var(--abona-card);
+        padding: 4px;
+        flex-shrink: 0;
+      }
+      .item-info { flex: 1; }
+      .item-name { font-size: 14px; font-weight: 500; line-height: 1.4; color: var(--abona-text); }
+      .item-qty  { font-size: 13px; color: var(--abona-sub); margin-top: 2px; }
+      .item-price { font-size: 14px; font-weight: 700; white-space: nowrap; color: var(--abona-rose, #c73060); }
+
+      /* Totals */
+      .order-totals {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--abona-border);
+        font-size: 14px;
+      }
+      .totals-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 0;
+        color: var(--abona-sub);
+      }
+      .totals-row.grand {
+        font-weight: 700;
+        font-size: 16px;
+        color: var(--abona-text);
+        border-top: 2px solid var(--abona-border);
+        margin-top: 8px;
+        padding-top: 10px;
+      }
+
+      /* Search form */
+      .tracking-search {
+        background: var(--abona-card);
+        border: 1px solid var(--abona-border);
+        border-radius: 10px;
+        padding: 28px;
+        margin-bottom: 20px;
+        transition: background 0.3s, border-color 0.3s;
+      }
+      .tracking-search h2 { font-size: 18px; margin-bottom: 16px; color: var(--abona-text); }
+      .search-row { display: flex; gap: 10px; }
+      .tracking-input {
+        flex: 1;
+        padding: 10px 14px;
+        border: 1px solid var(--abona-border);
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+        background: var(--abona-input-bg);
+        color: var(--abona-text);
+      }
+      .tracking-input:focus { outline: none; border-color: #c73060; box-shadow: 0 0 0 2px rgba(199,48,96,0.2); }
+      .track-btn {
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #c73060, #a8264f);
+        border: 1px solid #8c1e40;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+        color: #fff;
+        transition: all 0.15s;
+      }
+      .track-btn:hover { background: linear-gradient(135deg, #d9406d, #b82f59); }
+
+      .back-link { font-size: 14px; color: #c73060; text-decoration: none; display: inline-block; margin-bottom: 20px; }
+      .back-link:hover { text-decoration: underline; }
+
+      .eta-banner {
+        background: var(--abona-card);
+        border: 1px solid var(--abona-border);
+        border-radius: 8px;
+        padding: 14px 18px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        color: var(--abona-sub);
+        transition: background 0.3s;
+      }
+      .eta-banner strong { display: block; font-size: 16px; margin-bottom: 2px; color: var(--abona-text); }
+    </style>
+  </head>
+  <body>
+    <div class="amazon-header">
+      <div class="amazon-header-left-section">
+        <a href="index.html" class="header-link">
+          <img class="amazon-logo" src="images/abona.png" alt="Abona" onerror="this.style.display='none'">
+          <img class="amazon-mobile-logo" src="images/abona.png" alt="Abona" onerror="this.style.display='none'">
+        </a>
+      </div>
+      <div class="amazon-header-middle-section">
+        <input class="search-bar js-search-bar" type="text" placeholder="Search products…">
+        <button class="search-button js-search-button">
+          <img class="search-icon" src="images/icons/search-icon.png">
+        </button>
+      </div>
+      <div class="amazon-header-right-section">
+        <div class="js-auth-section"></div>
+        <a class="orders-link header-link" href="orders.html">
+          <span class="returns-text">Returns</span>
+          <span class="orders-text">&amp; Orders</span>
+        </a>
+        <a class="cart-link header-link" href="checkout.html">
+          <img class="cart-icon" src="images/icons/cart-icon.png">
+          <div class="cart-quantity js-cart-quantity">0</div>
+          <div class="cart-text">Cart</div>
+        </a>
+      </div>
+    </div>
+
+    <div class="tracking-page">
+      <h1>Track Your Order</h1>
+      <p class="subtitle">Enter your order ID or view tracking from your orders page.</p>
+      <div id="tracking-root">
+        <p style="color:#888">Loading…</p>
+      </div>
+    </div>
+
+    <script type="module">
+      import { initAuth, updateCartBadge } from './scripts/auth.js';
+      import { loadCart, getCartQuantity } from './data/cart.js';
+      import { formatCurrency } from './scripts/utils/money.js';
+      import { API_BASE } from './scripts/utils/api.js';
+
+      const STATUS_ORDER = ['pending', 'paid', 'shipped', 'delivered'];
+
+      const STEPS = [
+        { key: 'pending', label: 'Order Placed', icon: '🛒' },
+        { key: 'paid',    label: 'Payment Confirmed', icon: '✅' },
+        { key: 'shipped', label: 'Shipped', icon: '📦' },
+        { key: 'delivered', label: 'Delivered', icon: '🎉' },
+      ];
+
+      const PILL = {
+        pending:   'pill-pending',
+        paid:      'pill-paid',
+        shipped:   'pill-shipped',
+        delivered: 'pill-delivered',
+        cancelled: 'pill-cancelled',
+      };
+
+      function renderSearchForm(prefill = '') {
+        return `
+          <div class="tracking-search">
+            <h2>Enter Order ID</h2>
+            <div class="search-row">
+              <input class="tracking-input" id="orderIdInput" type="text"
+                placeholder="e.g. a1b2c3d4-…" value="${prefill}">
+              <button class="track-btn" id="trackBtn">Track</button>
+            </div>
+            <div id="searchError" style="color:#c40000;font-size:13px;margin-top:8px"></div>
+          </div>`;
+      }
+
+      function renderOrder(order) {
+        const isCancelled = order.status === 'cancelled';
+        const currentStep = isCancelled ? -1 : STATUS_ORDER.indexOf(order.status);
+        const progressPct = isCancelled ? 0 : [0, 33, 66, 100][currentStep] ?? 0;
+
+        const stepsHtml = STEPS.map((s, i) => {
+          const done    = !isCancelled && i < currentStep;
+          const current = !isCancelled && i === currentStep;
+          const dotClass = isCancelled && i === 0 ? 'cancelled' : done ? 'done' : current ? 'current' : '';
+          return `
+            <div class="timeline-step">
+              <div class="step-dot ${dotClass}">${done || (isCancelled && i === 0) ? (isCancelled ? '✕' : '✓') : s.icon}</div>
+              <div class="step-label ${current ? 'active' : ''}">${s.label}</div>
+            </div>`;
+        }).join('');
+
+        const placed = new Date(order.created_at);
+        const eta    = new Date(placed);
+        eta.setDate(eta.getDate() + 7);
+        const etaStr = eta.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+        const etaBanner = isCancelled
+          ? `<div class="eta-banner" style="background:#fee2e2;border-color:#fca5a5;color:#c40000"><strong>Order Cancelled</strong>This order was cancelled.</div>`
+          : order.status === 'delivered'
+            ? `<div class="eta-banner" style="background:#f0fdf4;border-color:#86efac;color:#16a34a"><strong>Delivered!</strong>Your order has been delivered.</div>`
+            : `<div class="eta-banner"><strong>Estimated Delivery: ${etaStr}</strong>Your order is on its way.</div>`;
+
+        const itemsHtml = (order.items || []).map(item => `
+          <div class="order-item">
+            <img src="${item.product_image}" alt="${item.product_name}" onerror="this.src='images/icons/cart-icon.png'">
+            <div class="item-info">
+              <div class="item-name">${item.product_name}</div>
+              <div class="item-qty">Qty: ${item.quantity}</div>
+            </div>
+            <div class="item-price">฿${formatCurrency(item.price_cents * item.quantity)}</div>
+          </div>`).join('');
+
+        const discountRow = (order.discount_cents > 0)
+          ? `<div class="totals-row" style="color:#c40000"><span>Discount</span><span>- ฿${formatCurrency(order.discount_cents)}</span></div>`
+          : '';
+
+        return `
+          <a class="back-link" href="orders.html">← Back to My Orders</a>
+
+          ${etaBanner}
+
+          <div class="tracking-card">
+            <div class="order-meta">
+              <div class="meta-item">
+                <div class="label">Order ID</div>
+                <div class="value" style="font-family:monospace;font-size:13px">${order.id.slice(0,8).toUpperCase()}…</div>
+              </div>
+              <div class="meta-item">
+                <div class="label">Placed On</div>
+                <div class="value">${placed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+              </div>
+              <div class="meta-item">
+                <div class="label">Status</div>
+                <div class="value"><span class="status-pill ${PILL[order.status] || 'pill-pending'}">${order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span></div>
+              </div>
+            </div>
+
+            <div class="status-timeline">
+              <div class="status-progress-line" style="width:${progressPct}%"></div>
+              ${stepsHtml}
+            </div>
+
+            <div class="order-items">${itemsHtml}</div>
+
+            <div class="order-totals">
+              <div class="totals-row"><span>Subtotal</span><span>฿${formatCurrency((order.subtotal_cents || order.total_cents))}</span></div>
+              <div class="totals-row"><span>Shipping</span><span>${order.shipping_cents === 0 ? 'FREE' : '฿' + formatCurrency(order.shipping_cents)}</span></div>
+              ${discountRow}
+              <div class="totals-row"><span>VAT (7%)</span><span>฿${formatCurrency(order.tax_cents)}</span></div>
+              <div class="totals-row grand"><span>Order Total</span><span>฿${formatCurrency(order.total_cents)}</span></div>
+            </div>
+          </div>`;
+      }
+
+      async function loadOrder(orderId) {
+        try {
+          const res = await fetch(`${API_BASE}/api/orders/${orderId}`, { credentials: 'include' });
+          if (!res.ok) throw new Error(res.status === 404 ? 'Order not found' : 'Failed to load');
+          const order = await res.json();
+          document.getElementById('tracking-root').innerHTML =
+            renderSearchForm(orderId) + renderOrder(order);
+          attachSearch();
+        } catch (err) {
+          document.getElementById('searchError').textContent = err.message || 'Could not load order.';
+        }
+      }
+
+      function attachSearch() {
+        const btn   = document.getElementById('trackBtn');
+        const input = document.getElementById('orderIdInput');
+        if (!btn) return;
+
+        const doTrack = () => {
+          const id = input.value.trim();
+          if (!id) return;
+          history.pushState(null, '', `?orderId=${id}`);
+          document.getElementById('tracking-root').innerHTML = renderSearchForm(id) + `<p style="color:#888;padding:20px 0">Loading…</p>`;
+          attachSearch();
+          loadOrder(id);
+        };
+
+        btn.addEventListener('click', doTrack);
+        input.addEventListener('keydown', e => { if (e.key === 'Enter') doTrack(); });
+      }
+
+      async function init() {
+        await initAuth();
+        await loadCart();
+        updateCartBadge(getCartQuantity());
+
+        const params  = new URLSearchParams(window.location.search);
+        const orderId = params.get('orderId');
+
+        if (orderId) {
+          document.getElementById('tracking-root').innerHTML =
+            renderSearchForm(orderId) + `<p style="color:#888;padding:20px 0">Loading…</p>`;
+          attachSearch();
+          loadOrder(orderId);
+        } else {
+          document.getElementById('tracking-root').innerHTML = renderSearchForm('');
+          attachSearch();
+        }
+      }
+
+      document.querySelector('.js-search-button').addEventListener('click', () => {
+        const q = document.querySelector('.js-search-bar').value.trim();
+        if (q) window.location.href = `index.html#search:${encodeURIComponent(q)}`;
+      });
+      document.querySelector('.js-search-bar').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.querySelector('.js-search-button').click();
+      });
+
+      init();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Orders — Abona Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/assets/admin.css">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><h2>Abona Admin</h2><span>Control Panel</span></div>
+      <ul class="sidebar-nav">
+        <li><a href="/admin/dashboard"><span class="icon">📊</span> Dashboard</a></li>
+        <li><a href="/admin/orders"><span class="icon">📦</span> Orders</a></li>
+        <li><a href="/admin/products"><span class="icon">🛍️</span> Products</a></li>
+        <li><a href="/admin/users"><span class="icon">👥</span> Users</a></li>
+        <li><a href="/admin/reviews"><span class="icon">⭐</span> Reviews</a></li>
+        <li><a href="/admin/coupons"><span class="icon">🏷️</span> Coupons</a></li>
+      </ul>
+      <div class="sidebar-footer">
+        <div class="admin-name">Admin</div>
+        <div class="admin-email">Loading...</div>
+        <button class="logout-btn">Sign out</button>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <div class="topbar"><h1>Orders</h1></div>
+      <div class="page-body">
+        <div class="table-card">
+          <div class="table-card-header">
+            <h2 id="orderCount">All Orders</h2>
+            <div class="filter-row">
+              <select id="statusFilter">
+                <option value="">All statuses</option>
+                <option value="pending">Pending</option>
+                <option value="paid">Paid</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Update Status</th>
+              </tr>
+            </thead>
+            <tbody id="ordersBody">
+              <tr><td colspan="7" class="empty-state">Loading...</td></tr>
+            </tbody>
+          </table>
+
+          <div class="pagination">
+            <span id="pageInfo"></span>
+            <button id="prevBtn" disabled>← Prev</button>
+            <button id="nextBtn" disabled>Next →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <script src="/admin/assets/admin.js"></script>
+  <script>
+    let currentPage = 1;
+    let totalPages  = 1;
+
+    async function loadOrders() {
+      const status = document.getElementById('statusFilter').value;
+      const params = new URLSearchParams({ page: currentPage });
+      if (status) params.set('status', status);
+
+      const res = await fetch(`/admin/api/orders?${params}`, { credentials: 'include' });
+      if (!res.ok) { showToast('Failed to load orders', true); return; }
+
+      const { orders, total, pages } = await res.json();
+      totalPages = pages || 1;
+
+      document.getElementById('orderCount').textContent =
+        `${total} Order${total !== 1 ? 's' : ''}`;
+      document.getElementById('pageInfo').textContent =
+        `Page ${currentPage} of ${totalPages}`;
+      document.getElementById('prevBtn').disabled = currentPage <= 1;
+      document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+
+      const tbody = document.getElementById('ordersBody');
+      if (!orders.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No orders found</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = orders.map(o => `
+        <tr>
+          <td><span class="order-id-cell" onclick="copyId(this,'${o.id}')" title="Click to copy full ID">${o.id.slice(0,8)}…</span></td>
+          <td>
+            <div style="font-weight:500">${o.user_name}</div>
+            <div style="color:#8c95a6;font-size:12px">${o.user_email}</div>
+          </td>
+          <td style="color:#8c95a6">—</td>
+          <td>${formatCurrency(o.total_cents)}</td>
+          <td>${statusBadge(o.status)}</td>
+          <td>${formatDate(o.created_at)}</td>
+          <td>
+            <select class="status-select" data-order-id="${o.id}" data-current="${o.status}">
+              <option value="pending"   ${o.status==='pending'   ? 'selected':''}>Pending</option>
+              <option value="paid"      ${o.status==='paid'      ? 'selected':''}>Paid</option>
+              <option value="shipped"   ${o.status==='shipped'   ? 'selected':''}>Shipped</option>
+              <option value="delivered" ${o.status==='delivered' ? 'selected':''}>Delivered</option>
+              <option value="cancelled" ${o.status==='cancelled' ? 'selected':''}>Cancelled</option>
+            </select>
+          </td>
+        </tr>
+      `).join('');
+
+      // Bind status change
+      tbody.querySelectorAll('.status-select').forEach(sel => {
+        sel.addEventListener('change', async () => {
+          const orderId = sel.dataset.orderId;
+          const status  = sel.value;
+
+          const res = await fetch(`/admin/api/orders/${orderId}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ status })
+          });
+
+          if (res.ok) {
+            showToast(`Order updated to "${status}"`);
+            sel.dataset.current = status;
+            // Update badge in same row
+            const badge = sel.closest('tr').querySelector('.badge');
+            badge.className = `badge badge-${status}`;
+            badge.textContent = status;
+          } else {
+            showToast('Failed to update order', true);
+            sel.value = sel.dataset.current;
+          }
+        });
+      });
+    }
+
+    document.getElementById('statusFilter').addEventListener('change', () => {
+      currentPage = 1;
+      loadOrders();
+    });
+
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      if (currentPage > 1) { currentPage--; loadOrders(); }
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      if (currentPage < totalPages) { currentPage++; loadOrders(); }
+    });
+
+    guardAdmin().then(admin => { if (admin) loadOrders(); });
+  </script>
+</body>
+</html>

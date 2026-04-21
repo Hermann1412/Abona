@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Login — Abona</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/assets/admin.css">
+</head>
+<body class="login-page">
+  <div class="login-box">
+    <h1>Admin Login</h1>
+    <p class="subtitle">Abona Shop — restricted access</p>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="admin@example.com" autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:11px">
+        Sign in
+      </button>
+      <p class="error-msg" id="errorMsg"></p>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errorMsg = document.getElementById('errorMsg');
+      errorMsg.textContent = '';
+
+      const email    = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await fetch('/admin/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          errorMsg.textContent = data.error || 'Login failed';
+          return;
+        }
+
+        window.location.href = '/admin/dashboard';
+      } catch {
+        errorMsg.textContent = 'Network error. Is the server running?';
+      }
+    });
+  </script>
+</body>
+</html>

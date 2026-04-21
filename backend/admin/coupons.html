@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Coupons — Abona Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/assets/admin.css">
+  <style>
+    .add-btn { padding: 8px 16px; background: #22c55e; color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500; }
+    .add-btn:hover { background: #16a34a; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #fff; border-radius: 10px; padding: 28px; width: 440px; max-width: 95vw; }
+    .modal h2 { margin: 0 0 20px; font-size: 18px; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 5px; }
+    .form-group input, .form-group select { width: 100%; padding: 8px 10px; border: 1px solid #dde1ea; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    .cancel-btn { padding: 8px 16px; background: #f1f3f7; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+    .submit-btn { padding: 8px 16px; background: #5a7af8; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; }
+    .badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+    .badge-active   { background: #dcfce7; color: #16a34a; }
+    .badge-inactive { background: #fee2e2; color: #c40000; }
+    .del-btn { padding: 4px 10px; background: transparent; border: 1px solid #fca5a5; color: #c40000; border-radius: 5px; font-size: 12px; cursor: pointer; }
+    .del-btn:hover { background: #fee2e2; }
+    .toggle-btn { padding: 4px 10px; background: #f1f3f7; border: 1px solid #dde1ea; border-radius: 5px; font-size: 12px; cursor: pointer; }
+    .toggle-btn:hover { background: #e0e4f0; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><h2>Abona Admin</h2><span>Control Panel</span></div>
+      <ul class="sidebar-nav">
+        <li><a href="/admin/dashboard"><span class="icon">📊</span> Dashboard</a></li>
+        <li><a href="/admin/orders"><span class="icon">📦</span> Orders</a></li>
+        <li><a href="/admin/products"><span class="icon">🛍️</span> Products</a></li>
+        <li><a href="/admin/users"><span class="icon">👥</span> Users</a></li>
+        <li><a href="/admin/reviews"><span class="icon">⭐</span> Reviews</a></li>
+        <li><a href="/admin/coupons"><span class="icon">🏷️</span> Coupons</a></li>
+      </ul>
+      <div class="sidebar-footer">
+        <div class="admin-name">Admin</div>
+        <div class="admin-email">Loading...</div>
+        <button class="logout-btn">Sign out</button>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <div class="topbar"><h1>Coupons</h1></div>
+      <div class="page-body">
+        <div class="table-card">
+          <div class="table-card-header">
+            <h2 id="couponCount">Coupons</h2>
+            <button class="add-btn" id="openModal">+ New Coupon</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Type</th>
+                <th>Value</th>
+                <th>Min Order</th>
+                <th>Uses</th>
+                <th>Expires</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="couponsBody">
+              <tr><td colspan="8" class="empty-state">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Coupon Modal -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <h2>New Coupon</h2>
+      <div class="form-group">
+        <label>Code *</label>
+        <input type="text" id="fCode" placeholder="e.g. SAVE20" style="text-transform:uppercase">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <input type="text" id="fDesc" placeholder="e.g. 20% off your order">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Type *</label>
+          <select id="fType">
+            <option value="percentage">Percentage (%)</option>
+            <option value="fixed">Fixed Amount (฿)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Value * <span id="valueHint" style="font-weight:400;color:#8c95a6">(% off)</span></label>
+          <input type="number" id="fValue" min="0" placeholder="20">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Min Order (฿) <span style="font-weight:400;color:#8c95a6">optional</span></label>
+          <input type="number" id="fMinOrder" min="0" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label>Max Uses <span style="font-weight:400;color:#8c95a6">blank = unlimited</span></label>
+          <input type="number" id="fMaxUses" min="1" placeholder="∞">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Max Uses Per User</label>
+          <input type="number" id="fMaxPerUser" min="1" value="1">
+        </div>
+        <div class="form-group">
+          <label>Expires At <span style="font-weight:400;color:#8c95a6">optional</span></label>
+          <input type="datetime-local" id="fExpires">
+        </div>
+      </div>
+      <div id="modalError" style="color:#c40000;font-size:13px;margin-top:4px"></div>
+      <div class="modal-footer">
+        <button class="cancel-btn" id="closeModal">Cancel</button>
+        <button class="submit-btn" id="saveCoupon">Create Coupon</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <script src="/admin/assets/admin.js"></script>
+  <script>
+    let coupons = [];
+
+    async function loadCoupons() {
+      const res = await fetch('/admin/api/coupons', { credentials: 'include' });
+      if (!res.ok) { showToast('Failed to load coupons', true); return; }
+      coupons = await res.json();
+      render();
+    }
+
+    function render() {
+      document.getElementById('couponCount').textContent =
+        `${coupons.length} Coupon${coupons.length !== 1 ? 's' : ''}`;
+
+      const tbody = document.getElementById('couponsBody');
+      if (!coupons.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No coupons yet</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = coupons.map(c => {
+        const valueLabel = c.type === 'percentage'
+          ? `${parseFloat(c.value)}% off`
+          : `฿${parseFloat(c.value).toFixed(2)} off`;
+        const minOrder = c.min_order_cents > 0
+          ? `฿${(c.min_order_cents / 100).toFixed(2)}` : '—';
+        const uses = c.max_uses
+          ? `${c.uses_count} / ${c.max_uses}`
+          : `${c.uses_count} / ∞`;
+        const expires = c.expires_at
+          ? new Date(c.expires_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })
+          : '—';
+        const isExpired = c.expires_at && new Date(c.expires_at) < new Date();
+        const badge = (c.is_active && !isExpired)
+          ? '<span class="badge badge-active">Active</span>'
+          : '<span class="badge badge-inactive">Inactive</span>';
+
+        return `<tr>
+          <td style="font-weight:700;font-family:monospace;font-size:14px">${c.code}</td>
+          <td style="text-transform:capitalize">${c.type}</td>
+          <td>${valueLabel}</td>
+          <td>${minOrder}</td>
+          <td>${uses}</td>
+          <td>${expires}</td>
+          <td>${badge}</td>
+          <td style="white-space:nowrap">
+            <button class="toggle-btn" data-id="${c.id}" data-active="${c.is_active}">
+              ${c.is_active ? 'Disable' : 'Enable'}
+            </button>
+            <button class="del-btn" data-id="${c.id}" style="margin-left:6px">Delete</button>
+          </td>
+        </tr>`;
+      }).join('');
+
+      tbody.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const res = await fetch(`/admin/api/coupons/${btn.dataset.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ is_active: btn.dataset.active === 'true' ? 0 : 1 })
+          });
+          if (res.ok) { showToast('Coupon updated'); loadCoupons(); }
+          else showToast('Failed', true);
+        });
+      });
+
+      tbody.querySelectorAll('.del-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Delete this coupon?')) return;
+          const res = await fetch(`/admin/api/coupons/${btn.dataset.id}`, {
+            method: 'DELETE', credentials: 'include'
+          });
+          if (res.ok) { showToast('Deleted'); loadCoupons(); }
+          else showToast('Failed', true);
+        });
+      });
+    }
+
+    // Type hint
+    document.getElementById('fType').addEventListener('change', (e) => {
+      document.getElementById('valueHint').textContent =
+        e.target.value === 'percentage' ? '(% off)' : '(฿ off)';
+    });
+
+    // Modal
+    document.getElementById('openModal').addEventListener('click', () =>
+      document.getElementById('modal').classList.add('open'));
+    document.getElementById('closeModal').addEventListener('click', () =>
+      document.getElementById('modal').classList.remove('open'));
+    document.getElementById('modal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('modal'))
+        document.getElementById('modal').classList.remove('open');
+    });
+
+    document.getElementById('saveCoupon').addEventListener('click', async () => {
+      const code       = document.getElementById('fCode').value.trim().toUpperCase();
+      const desc       = document.getElementById('fDesc').value.trim();
+      const type       = document.getElementById('fType').value;
+      const value      = parseFloat(document.getElementById('fValue').value);
+      const minOrder   = parseFloat(document.getElementById('fMinOrder').value) || 0;
+      const maxUses    = document.getElementById('fMaxUses').value ? parseInt(document.getElementById('fMaxUses').value) : null;
+      const maxPerUser = parseInt(document.getElementById('fMaxPerUser').value) || 1;
+      const expires    = document.getElementById('fExpires').value || null;
+      const errEl      = document.getElementById('modalError');
+
+      if (!code || isNaN(value) || value <= 0) {
+        errEl.textContent = 'Code and a valid value are required.';
+        return;
+      }
+      if (type === 'percentage' && value > 100) {
+        errEl.textContent = 'Percentage cannot exceed 100.';
+        return;
+      }
+
+      const res = await fetch('/admin/api/coupons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ code, description: desc, type, value, min_order_cents: Math.round(minOrder * 100), max_uses: maxUses, max_uses_per_user: maxPerUser, expires_at: expires })
+      });
+
+      if (res.ok) {
+        document.getElementById('modal').classList.remove('open');
+        errEl.textContent = '';
+        ['fCode','fDesc','fValue','fMinOrder','fMaxUses','fExpires'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('fMaxPerUser').value = '1';
+        showToast('Coupon created!');
+        loadCoupons();
+      } else {
+        const d = await res.json();
+        errEl.textContent = d.error || 'Failed to create coupon.';
+      }
+    });
+
+    guardAdmin().then(admin => { if (admin) loadCoupons(); });
+  </script>
+</body>
+</html>

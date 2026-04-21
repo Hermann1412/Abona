@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>Abona Shop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>if(localStorage.getItem('darkMode')==='true')document.documentElement.classList.add('dark');</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/shared/general.css">
+    <link rel="stylesheet" href="styles/shared/amazon-header.css">
+    <link rel="stylesheet" href="styles/pages/amazon.css">
+  </head>
+  <body>
+    <div class="amazon-header">
+      <div class="amazon-header-left-section">
+        <a href="index.html" class="header-link" style="gap:6px">
+          <img class="amazon-logo" src="images/abona.png" alt="Abona"
+            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <span class="header-brand-text" style="display:none">Abona</span>
+          <img class="amazon-mobile-logo" src="images/abona.png" alt="Abona" onerror="this.style.display='none'">
+        </a>
+      </div>
+
+      <div class="amazon-header-middle-section">
+        <input class="search-bar js-search-bar" type="text" placeholder="Search products…">
+        <button class="search-button js-search-button">
+          <img class="search-icon" src="images/icons/search-icon.png">
+        </button>
+      </div>
+
+      <div class="amazon-header-right-section">
+        <!-- Populated by auth.js -->
+        <div class="js-auth-section"></div>
+
+        <a class="wishlist-link header-link" href="wishlist.html" title="My Wishlist">
+          <span class="wishlist-icon">♥</span>
+          <span class="wishlist-text">Wishlist</span>
+        </a>
+
+        <a class="orders-link header-link" href="orders.html">
+          <span class="returns-text">Returns</span>
+          <span class="orders-text">&amp; Orders</span>
+        </a>
+
+        <a class="cart-link header-link" href="checkout.html">
+          <img class="cart-icon" src="images/icons/cart-icon.png">
+          <div class="cart-quantity js-cart-quantity">0</div>
+          <div class="cart-text">Cart</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Category filter bar -->
+    <div class="category-bar">
+      <button class="cat-btn active" data-type="">All</button>
+      <button class="cat-btn" data-type="kitchen">🍳 Kitchen</button>
+      <button class="cat-btn" data-type="clothing">👕 Clothing</button>
+      <button class="cat-btn" data-type="electronics">💻 Electronics</button>
+      <button class="cat-btn" data-type="sports">🏃 Sports</button>
+      <button class="cat-btn" data-type="toys">🧸 Toys</button>
+      <button class="cat-btn" data-type="other">📦 Other</button>
+    </div>
+
+    <!-- Price + rating filter bar -->
+    <div class="filter-bar">
+      <span class="filter-bar-label">Filter:</span>
+      <div class="filter-price-group">
+        <span style="color:#555">Price:</span>
+        <input type="number" id="minPrice" placeholder="฿ Min" class="price-filter-input" min="0">
+        <span class="filter-sep">–</span>
+        <input type="number" id="maxPrice" placeholder="฿ Max" class="price-filter-input" min="0">
+        <button class="filter-chip apply-chip" id="applyPrice">Apply</button>
+      </div>
+      <div class="filter-rating-group">
+        <span style="color:#555">Rating:</span>
+        <button class="filter-chip rating-chip active" data-min-stars="0">All</button>
+        <button class="filter-chip rating-chip" data-min-stars="3">3★+</button>
+        <button class="filter-chip rating-chip" data-min-stars="4">4★+</button>
+        <button class="filter-chip rating-chip" data-min-stars="4.5">4.5★+</button>
+      </div>
+    </div>
+
+    <!-- Search results label -->
+    <div class="search-status js-search-status" style="display:none"></div>
+
+    <div class="main">
+      <div class="products-grid js-products-grid"></div>
+    </div>
+
+    <!-- Lightbox -->
+    <div class="lightbox-overlay" id="lightbox">
+      <button class="lightbox-close" id="lightbox-close">&#x2715;</button>
+      <img class="lightbox-img" id="lightbox-img" src="" alt="">
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+      <div class="footer-top">
+        <div class="footer-col">
+          <h4>Abona Shop</h4>
+          <p class="brand-tagline">Your one-stop shop for quality products delivered to your door across Thailand.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Shop</h4>
+          <ul>
+            <li><a href="index.html">All Products</a></li>
+            <li><a href="index.html">Kitchen</a></li>
+            <li><a href="index.html">Clothing</a></li>
+            <li><a href="index.html">Sports</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Account</h4>
+          <ul>
+            <li><a href="orders.html">My Orders</a></li>
+            <li><a href="wishlist.html">My Wishlist</a></li>
+            <li><a href="settings.html">Settings</a></li>
+            <li><a href="tracking.html">Track Package</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Help</h4>
+          <ul>
+            <li><a href="orders.html">Returns &amp; Refunds</a></li>
+            <li><a href="tracking.html">Delivery Info</a></li>
+            <li><a href="login.html">Sign In</a></li>
+            <li><a href="register.html">Create Account</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        &copy; 2025 Abona Shop &middot; Thailand &nbsp;|&nbsp;
+        <a href="#">Privacy Policy</a> &nbsp;|&nbsp;
+        <a href="#">Terms of Service</a>
+      </div>
+    </footer>
+
+    <script type="module" src="scripts/amazon.js"></script>
+    <script>
+      const overlay   = document.getElementById('lightbox');
+      const lbImg     = document.getElementById('lightbox-img');
+      const lbClose   = document.getElementById('lightbox-close');
+
+      function openLightbox(src, alt) {
+        lbImg.src = src;
+        lbImg.alt = alt || '';
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeLightbox() {
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+
+      // Close on backdrop or X click
+      overlay.addEventListener('click', (e) => {
+        if (e.target !== lbImg) closeLightbox();
+      });
+      lbClose.addEventListener('click', closeLightbox);
+
+      // Close on Escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeLightbox();
+      });
+
+      // Delegate clicks on product images (re-fires after each render)
+      document.querySelector('.js-products-grid').addEventListener('click', (e) => {
+        const img = e.target.closest('.product-image-container a img.product-image');
+        if (!img) return;
+        e.preventDefault();
+        openLightbox(img.src, img.closest('.product-container')
+          ?.querySelector('.product-name')?.textContent?.trim() || '');
+      });
+    </script>
+  </body>
+</html>

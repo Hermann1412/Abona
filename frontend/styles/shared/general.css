@@ -1,0 +1,179 @@
+/* ═══════════════════════════════════════════════════════════
+   Abona Shop — Global Styles & Design System
+   Color palette: Rose × Deep Plum × Cream
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --abona-rose:       #c73060;
+  --abona-rose-hover: #a8264f;
+  --abona-rose-light: #fce8ef;
+  --abona-plum:       #1e1040;
+  --abona-gold:       #f0c14b;
+  --abona-bg:         #fefbff;
+  --abona-card:       #ffffff;
+  --abona-text:       #1e1a2e;
+  --abona-sub:        #6b6880;
+  --abona-border:     #e8e0f0;
+  --abona-input-bg:   #ffffff;
+  --abona-shadow:     rgba(30, 16, 64, 0.10);
+}
+
+/* Dark mode overrides */
+html.dark {
+  --abona-bg:       #0d0a16;
+  --abona-card:     #161028;
+  --abona-text:     #f0eaf8;
+  --abona-sub:      #9b93b0;
+  --abona-border:   #2a2040;
+  --abona-input-bg: #1e1834;
+  --abona-shadow:   rgba(0, 0, 0, 0.4);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  font-family: 'Roboto', Arial, sans-serif;
+  color: var(--abona-text);
+  margin: 0;
+  background: var(--abona-bg);
+  transition: background 0.3s, color 0.3s;
+  -webkit-font-smoothing: antialiased;
+}
+
+html.dark body { background: var(--abona-bg); color: var(--abona-text); }
+
+p { margin: 0; }
+
+button, select, input, textarea {
+  font-family: 'Roboto', Arial, sans-serif;
+}
+
+/* ── Buttons ────────────────────────────────────────────── */
+.button-primary {
+  color: #fff;
+  background: linear-gradient(135deg, var(--abona-rose) 0%, #a8264f 100%);
+  border: 1px solid #8c1e40;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(199, 48, 96, 0.30);
+  font-weight: 600;
+  transition: all 0.18s;
+}
+.button-primary:hover {
+  background: linear-gradient(135deg, #d9406d 0%, #b82f59 100%);
+  box-shadow: 0 4px 14px rgba(199, 48, 96, 0.40);
+  transform: translateY(-1px);
+}
+.button-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(199, 48, 96, 0.25);
+}
+
+.button-secondary {
+  color: var(--abona-text);
+  background: var(--abona-card);
+  border: 1px solid var(--abona-border);
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px var(--abona-shadow);
+  transition: all 0.15s;
+}
+.button-secondary:hover {
+  background: var(--abona-rose-light);
+  border-color: var(--abona-rose);
+  color: var(--abona-rose);
+}
+
+/* ── Links ──────────────────────────────────────────────── */
+.link-primary {
+  color: var(--abona-rose);
+  cursor: pointer;
+  text-decoration: none;
+}
+.link-primary:hover { color: var(--abona-rose-hover); text-decoration: underline; }
+
+/* ── Inputs ─────────────────────────────────────────────── */
+select {
+  color: var(--abona-text);
+  background: var(--abona-card);
+  border: 1px solid var(--abona-border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+select:focus, input:focus {
+  outline: 2px solid var(--abona-rose);
+  outline-offset: 1px;
+}
+
+/* ── Utility ────────────────────────────────────────────── */
+.limit-text-to-2-lines {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Site Footer
+   ═══════════════════════════════════════════════════════════ */
+.site-footer {
+  background: var(--abona-plum);
+  color: #a89ec0;
+  margin-top: 60px;
+}
+html.dark .site-footer { background: #080612; }
+
+.footer-top {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 48px 24px 32px;
+}
+
+.footer-col h4 {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.footer-col ul { list-style: none; padding: 0; margin: 0; }
+.footer-col ul li { margin-bottom: 8px; }
+.footer-col ul li a {
+  color: #a89ec0;
+  text-decoration: none;
+  font-size: 13px;
+  transition: color 0.15s;
+}
+.footer-col ul li a:hover { color: var(--abona-gold); }
+
+.footer-col .brand-tagline {
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+  color: #a89ec0;
+}
+
+.footer-bottom {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 16px 24px;
+  text-align: center;
+  font-size: 12px;
+  color: #6b6080;
+}
+.footer-bottom a { color: #7b70a0; text-decoration: none; }
+.footer-bottom a:hover { color: var(--abona-gold); }
+
+@media (max-width: 600px) {
+  .footer-top { grid-template-columns: 1fr 1fr; gap: 24px; padding: 32px 16px 24px; }
+}
+@media (max-width: 380px) {
+  .footer-top { grid-template-columns: 1fr; }
+}

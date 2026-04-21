@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>Checkout — Abona Shop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>if(localStorage.getItem('darkMode')==='true')document.documentElement.classList.add('dark');</script>
+    <link rel="stylesheet" href="styles/shared/general.css">
+    <link rel="stylesheet" href="styles/pages/checkout/checkout-header.css">
+    <link rel="stylesheet" href="styles/pages/checkout/checkout.css">
+    <!-- Stripe.js must load before the module scripts -->
+    <script src="https://js.stripe.com/v3/"></script>
+  </head>
+  <body>
+    <div class="checkout-header">
+      <div class="header-content">
+        <div class="checkout-header-left-section">
+          <a href="index.html">
+            <img class="amazon-logo" src="images/abona.png" alt="Abona" onerror="this.style.display='none'">
+            <img class="amazon-mobile-logo" src="images/abona.png" alt="Abona" onerror="this.style.display='none'">
+          </a>
+        </div>
+
+        <div class="checkout-header-middle-section">
+          Checkout (<a class="return-to-home-link" href="index.html">
+            <span class="js-cart-count">0</span> items
+          </a>)
+        </div>
+
+        <div class="checkout-header-right-section">
+          <img src="images/icons/checkout-lock-icon.png" onerror="this.style.display='none'">
+        </div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="page-title">Review your order</div>
+
+      <div class="checkout-grid">
+        <div class="order-summary js-order-summary"></div>
+        <div class="payment-summary js-payment-summary"></div>
+      </div>
+    </div>
+
+    <script type="module" src="scripts/checkout.js"></script>
+  </body>
+</html>

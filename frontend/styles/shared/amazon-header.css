@@ -1,0 +1,256 @@
+/* ═══════════════════════════════════════════════════════════
+   Abona Shop — Main Header
+   ═══════════════════════════════════════════════════════════ */
+
+.amazon-header {
+  background: #ffffff;
+  color: #1e1a2e;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 72px;
+  z-index: 1000;
+  box-shadow: 0 2px 12px rgba(30,16,64,0.10);
+  border-bottom: 2px solid #c73060;
+}
+
+html.dark .amazon-header {
+  background: #161028;
+  color: #f0eaf8;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.5);
+  border-bottom-color: #c73060;
+}
+
+/* ── Logo ─────────────────────────────────────────────────── */
+.amazon-header-left-section {
+  width: 220px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.amazon-logo {
+  height: 60px;
+  width: auto;
+  max-width: 200px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.amazon-mobile-logo {
+  display: none;
+}
+
+.header-brand-text {
+  color: #c73060;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-decoration: none;
+  display: none;
+  align-items: center;
+}
+
+/* ── Search ───────────────────────────────────────────────── */
+.amazon-header-middle-section {
+  flex: 1;
+  max-width: 680px;
+  margin: 0 20px;
+  display: flex;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1.5px solid var(--abona-border);
+  box-shadow: 0 0 0 2px transparent;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.amazon-header-middle-section:focus-within {
+  border-color: #c73060;
+  box-shadow: 0 0 0 3px rgba(199,48,96,0.12);
+}
+
+html.dark .amazon-header-middle-section {
+  border-color: #2a2040;
+}
+
+.search-bar {
+  flex: 1;
+  width: 0;
+  font-size: 15px;
+  height: 42px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 8px 0 0 8px;
+  outline: none;
+  background: #fff;
+  color: #111;
+}
+
+html.dark .search-bar {
+  background: #1e1834;
+  color: #f0eaf8;
+}
+
+.search-button {
+  background: linear-gradient(135deg, #c73060, #a8264f);
+  border: none;
+  width: 50px;
+  height: 42px;
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.search-button:hover {
+  background: linear-gradient(135deg, #d9406d, #b82f59);
+}
+
+.search-icon { height: 20px; filter: brightness(10); }
+
+/* ── Right section ────────────────────────────────────────── */
+.amazon-header-right-section {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.js-auth-section {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.auth-btn {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+  font-family: inherit;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.15s;
+}
+
+.auth-btn-signin {
+  background: linear-gradient(135deg, #c73060, #a8264f);
+  color: #fff;
+  border: 1px solid #8c1e40;
+}
+.auth-btn-signin:hover { background: linear-gradient(135deg, #d9406d, #b82f59); }
+
+.auth-btn-signout {
+  background: transparent;
+  color: #6b6880;
+  border: 1px solid var(--abona-border);
+}
+.auth-btn-signout:hover { background: #f5f0ff; border-color: #c73060; color: #c73060; }
+
+html.dark .auth-btn-signout {
+  color: #c8b8e8;
+  border-color: #2a2040;
+}
+html.dark .auth-btn-signout:hover { background: rgba(199,48,96,0.12); border-color: #c73060; color: #f78fb3; }
+
+.auth-user-name {
+  font-size: 12px;
+  color: #c73060;
+  white-space: nowrap;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-decoration: none;
+  font-weight: 600;
+}
+.auth-user-name:hover { text-decoration: underline; }
+
+.header-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  border: 1px solid transparent;
+  color: #1e1a2e;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.header-link:hover {
+  border-color: #c73060;
+  background: rgba(199,48,96,0.06);
+  color: #c73060;
+}
+
+html.dark .header-link { color: #f0eaf8; }
+html.dark .header-link:hover { background: rgba(199,48,96,0.12); border-color: #c73060; color: #f78fb3; }
+
+/* Wishlist */
+.wishlist-link { flex-direction: column; align-items: center; line-height: 1.2; }
+.wishlist-icon { font-size: 18px; color: #c73060; }
+.wishlist-text { font-size: 11px; font-weight: 600; }
+
+/* Orders */
+.orders-link { flex-direction: column; line-height: 1.2; }
+.returns-text { display: block; font-size: 11px; color: #6b6880; }
+.orders-text  { display: block; font-size: 13px; font-weight: 700; }
+
+html.dark .returns-text { color: #c8b8e8; }
+
+/* Cart */
+.cart-link {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+.cart-icon { width: 44px; }
+.cart-text { font-size: 13px; font-weight: 700; margin-top: 10px; }
+.cart-quantity {
+  color: #c73060;
+  font-size: 15px;
+  font-weight: 700;
+  position: absolute;
+  top: 4px; left: 20px;
+  width: 26px;
+  text-align: center;
+  line-height: 1;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .amazon-header-left-section { width: 180px; }
+  .amazon-logo { height: 52px; }
+  .returns-text { display: none; }
+}
+
+@media (max-width: 700px) {
+  .amazon-header { padding: 0 12px; height: 62px; }
+  .amazon-header-left-section { width: 52px; }
+  .amazon-logo { display: none; }
+  .amazon-mobile-logo {
+    display: block;
+    height: 46px;
+    width: auto;
+    object-fit: contain;
+  }
+  .orders-link  { display: none; }
+  .wishlist-link { display: none; }
+  .auth-user-name { display: none; }
+  .auth-btn { font-size: 11px; padding: 5px 10px; }
+  .cart-text { display: none; }
+  .cart-icon { width: 36px; }
+}
+
+@media (max-width: 480px) {
+  .amazon-header-middle-section { margin: 0 8px; }
+  .search-bar { font-size: 14px; height: 38px; }
+  .search-button { height: 38px; width: 44px; }
+}
