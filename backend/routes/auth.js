@@ -212,8 +212,12 @@ router.post('/reset-password', async (req, res) => {
     await pool.execute('UPDATE users SET password = ? WHERE id = ?', [hash, user_id]);
     await pool.execute('DELETE FROM password_resets WHERE user_id = ?', [user_id]);
 
-    // Clear any active session cookie so they log in fresh
-    res.clearCookie('token');
+    const isProd = process.env.ARCJET_ENV === 'production';
+    res.clearCookie('token', {
+      httpOnly: true,
+      sameSite: isProd ? 'none' : 'lax',
+      secure: isProd
+    });
     return res.json({ message: 'Password reset successfully. Please log in.' });
   } catch (err) {
     console.error(err);
@@ -223,7 +227,12 @@ router.post('/reset-password', async (req, res) => {
 
 // POST /api/auth/logout
 router.post('/logout', (req, res) => {
-  res.clearCookie('token');
+  const isProd = process.env.ARCJET_ENV === 'production';
+  res.clearCookie('token', {
+    httpOnly: true,
+    sameSite: isProd ? 'none' : 'lax',
+    secure: isProd
+  });
   res.json({ message: 'Logged out' });
 });
 

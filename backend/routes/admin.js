@@ -99,7 +99,12 @@ router.post('/api/login', async (req, res) => {
 
 // POST /admin/api/logout
 router.post('/api/logout', (req, res) => {
-  res.clearCookie('admin_token');
+  const isProd = process.env.ARCJET_ENV === 'production';
+  res.clearCookie('admin_token', {
+    httpOnly: true,
+    sameSite: isProd ? 'none' : 'lax',
+    secure: isProd
+  });
   res.json({ message: 'Logged out' });
 });
 
