@@ -84,9 +84,11 @@ router.post('/register', async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    const isProd = process.env.ARCJET_ENV === 'production';
     res.cookie('token', token, {
       httpOnly: true,
-      sameSite: 'lax',
+      sameSite: isProd ? 'none' : 'lax',
+      secure: isProd,
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
@@ -129,9 +131,11 @@ router.post('/login', async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    const isProd = process.env.ARCJET_ENV === 'production';
     res.cookie('token', token, {
       httpOnly: true,
-      sameSite: 'lax',
+      sameSite: isProd ? 'none' : 'lax',
+      secure: isProd,
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 

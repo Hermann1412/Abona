@@ -82,9 +82,11 @@ router.post('/api/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
+    const isProd = process.env.ARCJET_ENV === 'production';
     res.cookie('admin_token', token, {
       httpOnly: true,
-      sameSite: 'lax',
+      sameSite: isProd ? 'none' : 'lax',
+      secure: isProd,
       maxAge: 24 * 60 * 60 * 1000
     });
 
