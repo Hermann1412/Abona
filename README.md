@@ -8,6 +8,25 @@ A full-stack e-commerce web application built for the Thai market. Rose × deep 
 
 ---
 
+## Screenshots
+
+### Homepage
+![Homepage](screenshots/homepage.png)
+
+### Login
+![Login](screenshots/login.png)
+
+### Checkout & Payment
+![Payment](screenshots/payment.png)
+
+### Admin Dashboard
+![Dashboard](screenshots/dashboard.png)
+
+### Admin Products
+![Admin Products](screenshots/admin-products.png)
+
+---
+
 ## Project Structure
 
 ```
