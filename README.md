@@ -4,6 +4,8 @@ A full-stack e-commerce web application built for the Thai market. Rose × deep 
 
 **Author:** Hermann N'zi Ngenda
 
+**Live Site:** [https://abona-3ve.pages.dev](https://abona-3ve.pages.dev)
+
 ---
 
 ## Project Structure
