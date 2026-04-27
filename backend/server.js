@@ -28,15 +28,23 @@ const app = express();
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 3000;
 
+const ALLOWED_ORIGINS = [
+  process.env.CLIENT_ORIGIN || 'http://127.0.0.1:5500',
+  'https://abona.onrender.com',
+  'http://localhost:3000',
+  'http://127.0.0.1:5500'
+];
+
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CLIENT_ORIGIN || 'http://127.0.0.1:5500',
-    credentials: true
+    origin: (origin, cb) => cb(null, true),
+    credentials: true,
+    methods: ['GET', 'POST']
   }
 });
 
 app.use(cors({
-  origin: process.env.CLIENT_ORIGIN || 'http://127.0.0.1:5500',
+  origin: (origin, cb) => cb(null, true),
   credentials: true
 }));
 app.use(express.json());

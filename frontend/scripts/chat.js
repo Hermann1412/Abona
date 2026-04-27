@@ -216,29 +216,32 @@ export async function initChat(user) {
 
   await loadHistory();
 
-  // Connect socket — get token from cookie via a dedicated endpoint
-  const tokenRes = await fetch(`${API_BASE}/api/auth/token`, { credentials: 'include' });
-  if (!tokenRes.ok) return;
-  const { token } = await tokenRes.json();
-
-  // Load socket.io client dynamically if not already loaded
-  if (!window.io) {
-    await new Promise((resolve, reject) => {
-      const s = document.createElement('script');
-      s.src = 'https://cdn.socket.io/4.7.5/socket.io.min.js';
-      s.onload = resolve;
-      s.onerror = reject;
-      document.head.appendChild(s);
-    });
+  // Get token for Socket.io auth
+  let token = null;
+  try {
+    const tokenRes = await fetch(`${API_BASE}/api/auth/token`, { credentials: 'include' });
+    if (tokenRes.ok) {
+      const data = await tokenRes.json();
+      token = data.token;
+    }
+  } catch (e) {
+    console.warn('Could not get chat token:', e.message);
   }
+  if (!token) return;
 
-  const socketUrl = API_BASE.includes('127.0.0.1') || API_BASE.includes('localhost')
-    ? API_BASE
-    : API_BASE.replace('/api', '').replace('https://abona.onrender.com', 'https://abona.onrender.com');
+  // Wait for socket.io to be loaded (added as script tag in HTML)
+  let attempts = 0;
+  while (!window.io && attempts < 20) {
+    await new Promise(r => setTimeout(r, 100));
+    attempts++;
+  }
+  if (!window.io) return;
+
+  const socketUrl = API_BASE;
 
   socket = window.io(socketUrl, {
     auth: { token },
-    transports: ['websocket', 'polling']
+    transports: ['polling', 'websocket']
   });
 
   socket.on('connect', () => {
