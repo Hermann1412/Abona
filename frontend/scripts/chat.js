@@ -216,31 +216,17 @@ export async function initChat(user) {
 
   await loadHistory();
 
-  // Get token for Socket.io auth
-  let token = null;
-  try {
-    const tokenRes = await fetch(`${API_BASE}/api/auth/token`, { credentials: 'include' });
-    if (tokenRes.ok) {
-      const data = await tokenRes.json();
-      token = data.token;
-    }
-  } catch (e) {
-    console.warn('Could not get chat token:', e.message);
-  }
-  if (!token) return;
-
-  // Wait for socket.io to be loaded (added as script tag in HTML)
+  // Wait for socket.io script to load
   let attempts = 0;
-  while (!window.io && attempts < 20) {
+  while (!window.io && attempts < 30) {
     await new Promise(r => setTimeout(r, 100));
     attempts++;
   }
-  if (!window.io) return;
+  if (!window.io) { console.warn('socket.io not loaded'); return; }
 
-  const socketUrl = API_BASE;
-
-  socket = window.io(socketUrl, {
-    auth: { token },
+  // Connect using cookies for auth (no separate token fetch needed)
+  socket = window.io(API_BASE, {
+    withCredentials: true,
     transports: ['polling', 'websocket']
   });
 

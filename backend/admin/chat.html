@@ -332,8 +332,8 @@
   }
 
   // Init socket for admin
-  async function initSocket(adminToken) {
-    socket = io({ auth: { token: adminToken }, transports: ['websocket', 'polling'] });
+  async function initSocket() {
+    socket = io({ withCredentials: true, transports: ['polling', 'websocket'] });
 
     socket.on('connect', () => {
       // Rejoin active conversation room after reconnect
@@ -366,14 +366,7 @@
   guardAdmin().then(async admin => {
     if (!admin) return;
     adminId = admin.id;
-
-    // Get admin token for socket
-    const res = await fetch('/admin/api/token', { credentials: 'include' });
-    if (res.ok) {
-      const { token } = await res.json();
-      await initSocket(token);
-    }
-
+    await initSocket();
     loadConversations();
   });
 </script>

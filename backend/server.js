@@ -74,22 +74,31 @@ app.get('/api/config', (req, res) => res.json({ stripePublishableKey: process.en
 // Admin routes — HTML pages + API, all protected
 app.use('/admin', adminRoutes);
 
-// Socket.io auth middleware
+// Socket.io auth middleware — reads cookie from handshake headers
 io.use((socket, next) => {
-  const token = socket.handshake.auth.token;
-  if (!token) return next(new Error('No token'));
   try {
-    // Try customer token first, then admin token
-    try {
-      socket.user = jwt.verify(token, process.env.JWT_SECRET);
+    const cookies = socket.handshake.headers.cookie || '';
+    const get = (name) => {
+      const match = cookies.split(';').find(c => c.trim().startsWith(`${name}=`));
+      return match ? match.split('=').slice(1).join('=').trim() : null;
+    };
+
+    const userToken  = get('token');
+    const adminToken = get('admin_token');
+
+    if (userToken) {
+      socket.user = jwt.verify(userToken, process.env.JWT_SECRET);
       socket.user.isAdmin = false;
-    } catch {
-      socket.user = jwt.verify(token, process.env.JWT_ADMIN_SECRET);
-      socket.user.isAdmin = true;
+      return next();
     }
-    next();
+    if (adminToken) {
+      socket.user = jwt.verify(adminToken, process.env.JWT_ADMIN_SECRET);
+      socket.user.isAdmin = true;
+      return next();
+    }
+    return next(new Error('No auth cookie'));
   } catch {
-    next(new Error('Invalid token'));
+    return next(new Error('Invalid token'));
   }
 });
 
