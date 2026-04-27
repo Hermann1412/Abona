@@ -37,14 +37,14 @@ const ALLOWED_ORIGINS = [
 
 const io = new Server(httpServer, {
   cors: {
-    origin: (origin, cb) => cb(null, true),
+    origin: (origin, cb) => cb(null, origin || true),
     credentials: true,
     methods: ['GET', 'POST']
   }
 });
 
 app.use(cors({
-  origin: (origin, cb) => cb(null, true),
+  origin: (origin, cb) => cb(null, origin || true),
   credentials: true
 }));
 app.use(express.json());
