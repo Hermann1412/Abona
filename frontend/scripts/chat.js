@@ -173,15 +173,6 @@ export async function initChat(user) {
     return;
   }
 
-  // Load or create conversation
-  try {
-    const res = await fetch(`${API_BASE}/api/chat/conversation`, { credentials: 'include' });
-    const conv = await res.json();
-    conversationId = conv.id;
-  } catch {
-    return;
-  }
-
   box.innerHTML = `
     <div class="chat-header">
       <div class="chat-header-avatar">💬</div>
@@ -191,30 +182,16 @@ export async function initChat(user) {
       </div>
     </div>
     <div class="chat-messages" id="chat-messages">
-      <div class="chat-empty">No messages yet. Say hello! 👋</div>
+      <div class="chat-empty">Connecting… 💬</div>
     </div>
     <div class="chat-footer">
-      <input id="abona-chat-input" type="text" placeholder="Type a message…" maxlength="500">
-      <button id="abona-chat-send">➤</button>
+      <input id="abona-chat-input" type="text" placeholder="Type a message…" maxlength="500" disabled>
+      <button id="abona-chat-send" disabled>➤</button>
     </div>`;
 
   const messagesEl = box.querySelector('#chat-messages');
   const input = box.querySelector('#abona-chat-input');
   const sendBtn = box.querySelector('#abona-chat-send');
-  const badge = document.getElementById('abona-chat-badge');
-
-  // Load message history
-  async function loadHistory() {
-    const res = await fetch(`${API_BASE}/api/chat/conversation/${conversationId}/messages`, { credentials: 'include' });
-    const msgs = await res.json();
-    if (msgs.length) {
-      messagesEl.innerHTML = '';
-      msgs.forEach(m => messagesEl.appendChild(renderBubble(m, user.id)));
-      scrollToBottom(messagesEl);
-    }
-  }
-
-  await loadHistory();
 
   // Wait for socket.io script to load
   let attempts = 0;
@@ -231,8 +208,32 @@ export async function initChat(user) {
   });
 
   socket.on('connect', () => {
-    console.log('[Chat] Socket connected! id:', socket.id, '| conv:', conversationId);
-    socket.emit('customer:join', conversationId);
+    console.log('[Chat] Socket connected! id:', socket.id);
+    // Get or create conversation through the socket (avoids cross-origin cookie issue)
+    socket.emit('customer:init', {}, (response) => {
+      if (!response?.conversationId) {
+        console.warn('[Chat] No conversation ID returned');
+        return;
+      }
+      conversationId = response.conversationId;
+      console.log('[Chat] Conversation ID:', conversationId);
+      socket.emit('customer:join', conversationId);
+
+      // Load history
+      const msgs = response.messages || [];
+      if (msgs.length) {
+        messagesEl.innerHTML = '';
+        msgs.forEach(m => messagesEl.appendChild(renderBubble(m, user.id)));
+        scrollToBottom(messagesEl);
+      } else {
+        messagesEl.innerHTML = '<div class="chat-empty">No messages yet. Say hello! 👋</div>';
+      }
+
+      // Enable input
+      input.disabled = false;
+      sendBtn.disabled = false;
+      input.focus();
+    });
   });
 
   socket.on('connect_error', (err) => {

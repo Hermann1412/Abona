@@ -172,6 +172,38 @@ export function registerSocketHandlers(io) {
         }
       });
     } else {
+      // Customer init — get or create conversation, return ID + history
+      socket.on('customer:init', async (_, callback) => {
+        try {
+          let [rows] = await pool.execute(
+            "SELECT * FROM conversations WHERE user_id = ? AND status = 'open' ORDER BY created_at DESC LIMIT 1",
+            [user.id]
+          );
+          let conv = rows[0];
+          if (!conv) {
+            const [result] = await pool.execute(
+              'INSERT INTO conversations (user_id) VALUES (?)', [user.id]
+            );
+            const [newRows] = await pool.execute(
+              'SELECT * FROM conversations WHERE id = ?', [result.insertId]
+            );
+            conv = newRows[0];
+          }
+          const [messages] = await pool.execute(
+            'SELECT * FROM chat_messages WHERE conversation_id = ? ORDER BY created_at ASC',
+            [conv.id]
+          );
+          await pool.execute(
+            "UPDATE chat_messages SET is_read = TRUE WHERE conversation_id = ? AND sender_type = 'admin'",
+            [conv.id]
+          );
+          callback({ conversationId: conv.id, messages });
+        } catch (err) {
+          console.error('customer:init error:', err);
+          callback({ error: err.message });
+        }
+      });
+
       socket.on('customer:join', (conversationId) => {
         socket.join(`conv:${conversationId}`);
       });
