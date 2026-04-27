@@ -1,5 +1,4 @@
-fastapi==0.115.0
-uvicorn[standard]==0.30.0
+flask==3.0.3
 mysql-connector-python==8.3.0
 python-dotenv==1.0.1
-pydantic==2.7.4
+gunicorn==22.0.0
