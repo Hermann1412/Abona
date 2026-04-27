@@ -156,6 +156,7 @@ export async function initChat(user) {
 
   document.body.appendChild(btn);
   document.body.appendChild(box);
+  const badge = document.getElementById('abona-chat-badge');
 
   if (!user) {
     box.innerHTML = `

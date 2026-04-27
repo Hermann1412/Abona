@@ -166,7 +166,8 @@ export function registerSocketHandlers(io) {
           );
           await pool.execute('UPDATE conversations SET updated_at = NOW() WHERE id = ?', [conversationId]);
           const [rows] = await pool.execute('SELECT * FROM chat_messages WHERE id = ?', [result.insertId]);
-          io.to(`conv:${conversationId}`).emit('chat:message', rows[0]);
+          socket.emit('chat:message', rows[0]);
+          socket.to(`conv:${conversationId}`).emit('chat:message', rows[0]);
         } catch (err) {
           console.error('Admin message error:', err);
         }
@@ -224,7 +225,8 @@ export function registerSocketHandlers(io) {
           );
           await pool.execute('UPDATE conversations SET updated_at = NOW() WHERE id = ?', [conversationId]);
           const [rows] = await pool.execute('SELECT * FROM chat_messages WHERE id = ?', [result.insertId]);
-          io.to(`conv:${conversationId}`).emit('chat:message', rows[0]);
+          socket.emit('chat:message', rows[0]);
+          socket.to(`conv:${conversationId}`).emit('chat:message', rows[0]);
           io.emit('admin:new_message', { conversationId, userName: user.name });
 
           // If message contains @abona → reply instantly with bot
@@ -232,7 +234,8 @@ export function registerSocketHandlers(io) {
             const bot = await askBot(message, conversationId);
             if (bot?.reply) {
               const botMsg = await saveBotMessage(conversationId, bot.reply);
-              io.to(`conv:${conversationId}`).emit('chat:message', { ...botMsg, products: bot.products || [] });
+              socket.emit('chat:message', { ...botMsg, products: bot.products || [] });
+              socket.to(`conv:${conversationId}`).emit('chat:message', { ...botMsg, products: bot.products || [] });
             }
             return; // skip 30s timer when bot already replied
           }
