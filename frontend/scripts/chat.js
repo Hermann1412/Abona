@@ -231,11 +231,16 @@ export async function initChat(user) {
   });
 
   socket.on('connect', () => {
+    console.log('[Chat] Socket connected! id:', socket.id, '| conv:', conversationId);
     socket.emit('customer:join', conversationId);
   });
 
   socket.on('connect_error', (err) => {
-    console.warn('Chat connection error:', err.message);
+    console.warn('[Chat] Connection error:', err.message);
+  });
+
+  socket.on('disconnect', (reason) => {
+    console.warn('[Chat] Disconnected:', reason);
   });
 
   socket.on('chat:message', (msg) => {
@@ -252,6 +257,7 @@ export async function initChat(user) {
   function sendMessage() {
     const text = input.value.trim();
     if (!text || !socket) return;
+    console.log('[Chat] Sending:', text, '| conv:', conversationId, '| connected:', socket.connected);
     socket.emit('customer:message', { conversationId, message: text });
     input.value = '';
   }
