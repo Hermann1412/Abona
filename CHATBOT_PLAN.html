@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abona AI Chatbot — Technical Plan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300&family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --rose: #c73060;
+      --plum: #1e1040;
+      --ink: #1a1a2e;
+      --body: #2d2d3a;
+      --muted: #5a5a72;
+      --border: #ddd8e8;
+      --bg: #faf9fc;
+      --card: #ffffff;
+      --code-bg: #f4f2f9;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--body);
+      line-height: 1.75;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Cover ── */
+    .cover {
+      min-height: 100vh;
+      background: linear-gradient(145deg, #0a1628 0%, #1a2d50 50%, #0a1628 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 60px 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cover::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 30% 40%, rgba(199,48,96,0.2) 0%, transparent 60%),
+                  radial-gradient(ellipse at 70% 70%, rgba(60,120,220,0.15) 0%, transparent 55%);
+    }
+
+    .cover-inner { position: relative; z-index: 1; max-width: 700px; }
+
+    .cover-tag {
+      display: inline-block;
+      background: rgba(199,48,96,0.2);
+      border: 1px solid rgba(199,48,96,0.5);
+      color: #f0a0c0;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 6px 18px;
+      border-radius: 20px;
+      margin-bottom: 28px;
+    }
+
+    .cover h1 {
+      font-family: 'Merriweather', serif;
+      font-size: 3.2rem;
+      font-weight: 900;
+      color: #ffffff;
+      line-height: 1.15;
+      margin-bottom: 10px;
+    }
+
+    .cover h1 span { color: #c73060; }
+
+    .cover-subtitle {
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.65);
+      margin: 20px 0 32px;
+      line-height: 1.8;
+    }
+
+    .cover-divider {
+      width: 60px; height: 3px;
+      background: linear-gradient(90deg, #c73060, #8b1a40);
+      margin: 0 auto 28px;
+      border-radius: 2px;
+    }
+
+    .cover-meta-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: 0.5px;
+    }
+
+    .cover-meta-sub {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.5);
+      margin-top: 6px;
+    }
+
+    .cover-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 28px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.7);
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+    }
+
+    /* ── Sections ── */
+    .section {
+      padding: 64px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section:last-child { border-bottom: none; }
+
+    .container { max-width: 860px; margin: 0 auto; padding: 0 40px; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 32px;
+    }
+
+    .section-num {
+      font-family: 'Merriweather', serif;
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: var(--border);
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .section-title {
+      font-family: 'Merriweather', serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    p { margin-bottom: 16px; color: var(--body); font-size: 0.97rem; }
+
+    h3 {
+      font-family: 'Merriweather', serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--ink);
+      margin: 28px 0 14px;
+    }
+
+    /* ── Code blocks ── */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--rose);
+      border-radius: 8px;
+      padding: 20px 22px;
+      overflow-x: auto;
+      margin: 20px 0;
+      font-family: 'Source Code Pro', monospace;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      color: #2d1060;
+    }
+
+    /* ── Tables ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 0.88rem;
+    }
+
+    th {
+      background: var(--plum);
+      color: #fff;
+      padding: 10px 16px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.8rem;
+      letter-spacing: 0.5px;
+    }
+
+    td {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--body);
+    }
+
+    tr:nth-child(even) td { background: #f7f5fc; }
+
+    /* ── Flow diagram ── */
+    .flow {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      margin: 24px 0;
+    }
+
+    .flow-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 8px 0;
+    }
+
+    .flow-box {
+      background: linear-gradient(135deg, #f4f2f9, #ede8f5);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--ink);
+      flex: 1;
+    }
+
+    .flow-box.highlight {
+      background: linear-gradient(135deg, #c73060, #8b1a40);
+      color: #fff;
+      border-color: #c73060;
+    }
+
+    .flow-box.python {
+      background: linear-gradient(135deg, #1a4080, #0d2040);
+      color: #fff;
+      border-color: #1a4080;
+    }
+
+    .flow-arrow {
+      font-size: 1.2rem;
+      color: var(--rose);
+      flex-shrink: 0;
+    }
+
+    /* ── Intent cards ── */
+    .intent-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+      margin: 20px 0;
+    }
+
+    .intent-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .intent-card-trigger {
+      font-size: 0.75rem;
+      color: var(--rose);
+      font-weight: 600;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .intent-card-title {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+
+    .intent-card-desc {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* ── Conversation mockup ── */
+    .chat-mockup {
+      background: #f0f0f5;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .chat-row { display: flex; gap: 10px; margin: 10px 0; align-items: flex-end; }
+    .chat-row.right { flex-direction: row-reverse; }
+
+    .chat-bubble-demo {
+      max-width: 70%;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 0.83rem;
+      line-height: 1.55;
+    }
+
+    .chat-bubble-demo.customer {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-bottom-left-radius: 3px;
+      color: #1e2022;
+    }
+
+    .chat-bubble-demo.bot {
+      background: linear-gradient(135deg, #1a4080, #0d2040);
+      color: #fff;
+      border-bottom-right-radius: 3px;
+    }
+
+    .chat-label {
+      font-size: 0.72rem;
+      color: #888;
+      margin-bottom: 3px;
+      font-weight: 600;
+    }
+
+    /* ── Todo list ── */
+    .todo-list {
+      list-style: none;
+      margin: 20px 0;
+    }
+
+    .todo-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+
+    .todo-num {
+      background: var(--rose);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .todo-text strong { color: var(--ink); }
+    .todo-text span { color: var(--muted); font-size: 0.83rem; }
+
+    /* ── Structure tree ── */
+    .tree {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      font-family: 'Source Code Pro', monospace;
+      font-size: 0.82rem;
+      line-height: 1.9;
+      color: #2d1060;
+    }
+
+    .tree .folder { color: #c73060; font-weight: 600; }
+    .tree .file { color: #1a4080; }
+    .tree .comment { color: #888; }
+
+    /* ── Cost badge ── */
+    .cost-banner {
+      background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+      border: 1px solid #86efac;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 24px 0;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .cost-icon { font-size: 2rem; }
+    .cost-title { font-weight: 700; color: #14532d; font-size: 1rem; }
+    .cost-sub { font-size: 0.85rem; color: #166534; margin-top: 2px; }
+
+    /* ── Print ── */
+    @media print {
+      .cover { min-height: auto; padding: 80px 40px; page-break-after: always; }
+      .section { page-break-inside: avoid; }
+      body { background: #fff; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-inner">
+    <div class="cover-tag">Technical Architecture Document</div>
+    <h1>Abona <span>AI Bot</span></h1>
+    <p class="cover-subtitle">
+      Python microservice chatbot integrated with the Abona Shop Node.js backend —<br>
+      intent detection, product recommendations, and auto-reply system.
+    </p>
+    <div class="cover-divider"></div>
+    <div class="cover-meta-name">Hermann N'zi Ngenda</div>
+    <div class="cover-meta-sub">Abona Shop · AI Extension Plan · April 2026</div>
+    <div class="cover-badge">🤖 Python · FastAPI · spaCy · MySQL · Socket.io</div>
+  </div>
+</div>
+
+<!-- 01 — OVERVIEW -->
+<div class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num">01</div>
+      <h2 class="section-title">Project Overview</h2>
+    </div>
+
+    <p>The Abona AI Chatbot is a Python-based microservice that adds intelligent automated responses to the existing Abona Shop live chat system. It operates alongside the Node.js backend without replacing or modifying the core architecture — it acts purely as an intelligent responder that Node.js consults when needed.</p>
+
+    <p>The bot handles two scenarios: product recommendations triggered by <strong>@abona</strong> mentions, and automatic courtesy replies when no admin responds within 30 seconds. All responses are delivered in real time through the existing Socket.io infrastructure.</p>
+
+    <div class="cost-banner">
+      <div class="cost-icon">💚</div>
+      <div>
+        <div class="cost-title">Total Cost: $0 — Free Forever</div>
+        <div class="cost-sub">Python, FastAPI, spaCy, sentence-transformers, and Render free tier are all completely free. No API keys required.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 02 — ARCHITECTURE -->
+<div class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num">02</div>
+      <h2 class="section-title">System Architecture</h2>
+    </div>
+
+    <p>The system follows a microservices pattern. The Node.js backend remains the single point of contact for the frontend. When bot logic is needed, Node.js makes an internal HTTP call to the Python service, receives a response, and delivers it to the customer via Socket.io.</p>
+
+    <div class="flow">
+      <div class="flow-row">
+        <div class="flow-box" style="text-align:center">👤 Customer<br><small>Sends message</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box highlight" style="text-align:center">Node.js<br><small>port 3000</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box python" style="text-align:center">🐍 Python Bot<br><small>port 8000</small></div>
+      </div>
+      <div style="text-align:center;margin:10px 0;color:#888;font-size:0.8rem">↕ POST /analyze &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ↕ { reply, products }</div>
+      <div class="flow-row">
+        <div class="flow-box" style="text-align:center">👤 Customer<br><small>Sees reply instantly</small></div>
+        <div class="flow-arrow">←</div>
+        <div class="flow-box highlight" style="text-align:center">Socket.io<br><small>delivers message</small></div>
+        <div class="flow-arrow">←</div>
+        <div class="flow-box" style="text-align:center">MySQL<br><small>products queried</small></div>
+      </div>
+    </div>
+
+    <h3>Deployment Setup</h3>
+    <table>
+      <thead><tr><th>Service</th><th>Technology</th><th>URL</th><th>Cost</th></tr></thead>
+      <tbody>
+        <tr><td>Frontend</td><td>HTML/CSS/JS</td><td>abona-3ve.pages.dev</td><td>Free</td></tr>
+        <tr><td>Backend</td><td>Node.js / Express</td><td>abona.onrender.com</td><td>Free</td></tr>
+        <tr><td>Database</td><td>MySQL (Aiven)</td><td>abona-abona.aivencloud.com</td><td>Free</td></tr>
+        <tr><td><strong>AI Bot</strong></td><td><strong>Python / FastAPI</strong></td><td><strong>abona-bot.onrender.com</strong></td><td><strong>Free</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 03 — FOLDER STRUCTURE -->
+<div class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num">03</div>
+      <h2 class="section-title">Folder Structure</h2>
+    </div>
+
+    <div class="tree">
+      <span class="folder">Abona/</span><br>
+      ├── <span class="folder">frontend/</span> <span class="comment">← unchanged</span><br>
+      ├── <span class="folder">backend/</span> <span class="comment">← Node.js (minor additions)</span><br>
+      │&nbsp;&nbsp; └── routes/<span class="file">chat.js</span> <span class="comment">← calls Python bot + 30s timer</span><br>
+      │<br>
+      └── <span class="folder">bot/</span> <span class="comment">← NEW Python microservice</span><br>
+      &nbsp;&nbsp;&nbsp; ├── <span class="file">main.py</span> <span class="comment">← FastAPI entry point, /analyze endpoint</span><br>
+      &nbsp;&nbsp;&nbsp; ├── <span class="file">analyzer.py</span> <span class="comment">← spaCy intent detection</span><br>
+      &nbsp;&nbsp;&nbsp; ├── <span class="file">responder.py</span> <span class="comment">← builds reply messages</span><br>
+      &nbsp;&nbsp;&nbsp; ├── <span class="file">db.py</span> <span class="comment">← connects to MySQL, fetches products</span><br>
+      &nbsp;&nbsp;&nbsp; ├── <span class="file">intents.py</span> <span class="comment">← all keyword rules & patterns</span><br>
+      &nbsp;&nbsp;&nbsp; ├── <span class="file">requirements.txt</span> <span class="comment">← Python dependencies</span><br>
+      &nbsp;&nbsp;&nbsp; └── <span class="file">.env</span> <span class="comment">← BOT_PORT, DB credentials</span>
+    </div>
+  </div>
+</div>
+
+<!-- 04 — TECH STACK -->
+<div class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num">04</div>
+      <h2 class="section-title">Technology Stack</h2>
+    </div>
+
+    <table>
+      <thead><tr><th>Layer</th><th>Technology</th><th>Purpose</th><th>Cost</th></tr></thead>
+      <tbody>
+        <tr><td>Language</td><td>Python 3.11+</td><td>Bot service runtime</td><td>Free</td></tr>
+        <tr><td>API Framework</td><td>FastAPI</td><td>REST endpoint (/analyze)</td><td>Free</td></tr>
+        <tr><td>Server</td><td>Uvicorn</td><td>Run FastAPI in production</td><td>Free</td></tr>
+        <tr><td>NLP Engine</td><td>spaCy (en_core_web_sm)</td><td>Tokenize &amp; understand messages</td><td>Free</td></tr>
+        <tr><td>Similarity</td><td>sentence-transformers</td><td>Match synonyms ("cheap"="budget")</td><td>Free</td></tr>
+        <tr><td>Database</td><td>mysql-connector-python</td><td>Query products from MySQL</td><td>Free</td></tr>
+        <tr><td>Environment</td><td>python-dotenv</td><td>Load .env variables</td><td>Free</td></tr>
+        <tr><td>HTTP Client</td><td>node-fetch (Node.js)</td><td>Node.js calls Python service</td><td>Free</td></tr>
+      </tbody>
+    </table>
+
+    <h3>requirements.txt</h3>
+    <pre>fastapi==0.110.0
+uvicorn==0.29.0
+spacy==3.7.4
+sentence-transformers==2.6.1
+mysql-connector-python==8.3.0
+python-dotenv==1.0.1
+pydantic==2.6.4</pre>
+  </div>
+</div>
+
+<!-- 05 — BOT INTELLIGENCE -->
+<div class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num">05</div>
+      <h2 class="section-title">Bot Intelligence Layers</h2>
+    </div>
+
+    <p>The bot processes every message through four sequential layers. Each layer adds more context until a final response is ready to send.</p>
+
+    <pre>Message received: "@abona gift under ฿1500"
+        │
+        ▼
+┌─────────────────────────────────────────┐
+│  Layer 1 — Trigger Detection            │
+│  • Contains @abona?           → YES     │
+│  • Is it a greeting?          → NO      │
+│  • Is it a policy question?   → NO      │
+└───────────────────┬─────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────┐
+│  Layer 2 — Intent Recognition (spaCy)   │
+│  • Tokenize message                     │
+│  • Extract: intent = "gift"             │
+│  • Extract: budget = 1500               │
+│  • Extract: keywords = []               │
+└───────────────────┬─────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────┐
+│  Layer 3 — Product Matching (MySQL)     │
+│  SELECT * FROM products                 │
+│  WHERE price_cents <= 150000            │
+│  ORDER BY stars DESC LIMIT 3           │
+└───────────────────┬─────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────┐
+│  Layer 4 — Response Builder             │
+│  Format 3 products with emoji           │
+│  Add prices in ฿, star ratings          │
+│  Return structured JSON reply           │
+└─────────────────────────────────────────┘</pre>
+  </div>
+</div>
+
+<!-- 06 — INTENTS -->
+<div class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num">06</div>
+      <h2 class="section-title">Supported Intents</h2>
+    </div>
+
+    <div class="intent-grid">
+      <div class="intent-card">
+        <div class="intent-card-trigger">Keywords: hi, hello, สวัสดี</div>
+        <div class="intent-card-title">👋 Greeting</div>
+        <div class="intent-card-desc">Sends welcome message and explains @abona command</div>
+      </div>
+      <div class="intent-card">
+        <div class="intent-card-trigger">Keywords: recommend, suggest, want</div>
+        <div class="intent-card-title">🛍️ Product Search</div>
+        <div class="intent-card-desc">Searches products by keyword, returns top 3 matches</div>
+      </div>
+      <div class="intent-card">
+        <div class="intent-card-trigger">Keywords: under, cheap, budget, ฿</div>
+        <div class="intent-card-title">💰 Budget Filter</div>
+        <div class="intent-card-desc">Extracts price from message and filters products</div>
+      </div>
+      <div class="intent-card">
+        <div class="intent-card-trigger">Keywords: popular, best, top, trending</div>
+        <div class="intent-card-title">⭐ Best Sellers</div>
+        <div class="intent-card-desc">Returns highest rated products in the catalog</div>
+      </div>
+      <div class="intent-card">
+        <div class="intent-card-trigger">Keywords: gift, present, surprise</div>
+        <div class="intent-card-title">🎁 Gift Finder</div>
+        <div class="intent-card-desc">Recommends gift-suitable items, can combine with budget</div>
+      </div>
+      <div class="intent-card">
+        <div class="intent-card-trigger">Keywords: shipping, delivery, how long</div>
+        <div class="intent-card-title">📦 Shipping Info</div>
+        <div class="intent-card-desc">Returns shipping policy and estimated delivery times</div>
+      </div>
+      <div class="intent-card">
+        <div class="intent-card-trigger">Keywords: return, refund, exchange</div>
+        <div class="intent-card-title">↩️ Returns Policy</div>
+        <div class="intent-card-desc">Explains the 7-day return policy and process</div>
+      </div>
+      <div class="intent-card">
+        <div class="intent-card-trigger">Keywords: pay, card, stripe, wallet</div>
+        <div class="intent-card-title">💳 Payment Info</div>
+        <div class="intent-card-desc">Lists accepted payment methods and Stripe security</div>
+      </div>
+      <div class="intent-card">
+        <div class="intent-card-trigger">Auto-trigger: 30s no admin reply</div>
+        <div class="intent-card-title">⏱️ Admin Away</div>
+        <div class="intent-card-desc">Polite auto-reply, offers bot help while admin is busy</div>
+      </div>
+      <div class="intent-card">
+        <div class="intent-card-trigger">Anything unrecognized</div>
+        <div class="intent-card-title">❓ Fallback</div>
+        <div class="intent-card-desc">Suggests using @abona or says admin will assist</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 07 — EXAMPLE CONVERSATIONS -->
+<div class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num">07</div>
+      <h2 class="section-title">Example Conversations</h2>
+    </div>
+
+    <h3>Product Recommendation with Budget</h3>
+    <div class="chat-mockup">
+      <div class="chat-row">
+        <div>
+          <div class="chat-label">Customer</div>
+          <div class="chat-bubble-demo customer">@abona I need a gift under ฿1,500</div>
+        </div>
+      </div>
+      <div class="chat-row right">
+        <div style="text-align:right">
+          <div class="chat-label">🤖 Abona Bot</div>
+          <div class="chat-bubble-demo bot">Great choice! Here are gift ideas under ฿1,500 🎁<br><br>🌸 <strong>Rose Eau de Parfum</strong><br>฿1,200 · ⭐ 4.8 (124 reviews)<br><br>💆 <strong>Silk Body Lotion Set</strong><br>฿890 · ⭐ 4.5 (89 reviews)<br><br>🕯️ <strong>Jasmine Candle Collection</strong><br>฿750 · ⭐ 4.7 (56 reviews)<br><br>Type a product name to learn more!</div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Policy Question</h3>
+    <div class="chat-mockup">
+      <div class="chat-row">
+        <div>
+          <div class="chat-label">Customer</div>
+          <div class="chat-bubble-demo customer">what is your return policy?</div>
+        </div>
+      </div>
+      <div class="chat-row right">
+        <div style="text-align:right">
+          <div class="chat-label">🤖 Abona Bot</div>
+          <div class="chat-bubble-demo bot">We offer a <strong>7-day return policy</strong> on all items in original condition. 📦<br><br>To start a return, contact our team through this chat or email us. Refunds are processed within 3–5 business days.</div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Auto-Reply (Admin Away 30 seconds)</h3>
+    <div class="chat-mockup">
+      <div class="chat-row">
+        <div>
+          <div class="chat-label">Customer</div>
+          <div class="chat-bubble-demo customer">hello, I need some help</div>
+        </div>
+      </div>
+      <div class="chat-row right">
+        <div style="text-align:right">
+          <div class="chat-label">🤖 Abona Bot <small style="color:rgba(255,255,255,0.6)">(30s later)</small></div>
+          <div class="chat-bubble-demo bot">Hi there! 👋 Our support team will be with you shortly.<br><br>In the meantime, try typing <strong>@abona</strong> followed by your question for instant product recommendations and answers!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 08 — CODE OVERVIEW -->
+<div class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num">08</div>
+      <h2 class="section-title">Code Overview</h2>
+    </div>
+
+    <h3>Python — main.py (FastAPI endpoint)</h3>
+    <pre>from fastapi import FastAPI
+from analyzer import detect_intent
+from db import search_products
+from responder import build_reply
+
+app = FastAPI()
+
+@app.post("/analyze")
+async def analyze(req: dict):
+    message = req.get("message", "")
+    intent  = detect_intent(message)
+    products = search_products(intent)
+    reply   = build_reply(intent, products)
+    return { "reply": reply, "products": products }</pre>
+
+    <h3>Python — analyzer.py (Intent Detection)</h3>
+    <pre>import spacy
+nlp = spacy.load("en_core_web_sm")
+
+INTENTS = {
+    "greeting":  ["hi","hello","hey","สวัสดี"],
+    "gift":      ["gift","present","surprise"],
+    "budget":    ["cheap","budget","under","affordable"],
+    "shipping":  ["shipping","delivery","arrive"],
+    "returns":   ["return","refund","exchange"],
+    "best":      ["popular","best","top","trending"],
+}
+
+def detect_intent(message: str) -> dict:
+    doc  = nlp(message.lower())
+    tokens = [t.text for t in doc]
+    intent = "unknown"
+    budget = None
+
+    for name, keywords in INTENTS.items():
+        if any(k in tokens for k in keywords):
+            intent = name
+            break
+
+    # Extract budget amount (e.g. "under 1500")
+    for i, token in enumerate(doc):
+        if token.like_num and i > 0:
+            budget = float(token.text.replace(",",""))
+
+    return { "intent": intent, "budget": budget, "tokens": tokens }</pre>
+
+    <h3>Node.js — Auto-reply Timer (chat.js)</h3>
+    <pre>const timers = new Map();
+
+socket.on('customer:message', async ({ conversationId, message }) => {
+  // Start 30-second timer
+  const timer = setTimeout(async () => {
+    const res = await fetch('http://localhost:8000/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, conversation_id: conversationId })
+    });
+    const { reply } = await res.json();
+    // Save bot message and emit to room
+    saveBotMessage(conversationId, reply);
+    io.to(`conv:${conversationId}`).emit('chat:message', { ... });
+  }, 30000);
+
+  timers.set(conversationId, timer);
+});
+
+// Cancel timer when admin replies
+socket.on('admin:message', ({ conversationId }) => {
+  clearTimeout(timers.get(conversationId));
+  timers.delete(conversationId);
+});</pre>
+  </div>
+</div>
+
+<!-- 09 — TO-DO LIST -->
+<div class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num">09</div>
+      <h2 class="section-title">Build To-Do List</h2>
+    </div>
+
+    <ul class="todo-list">
+      <li>
+        <div class="todo-num">1</div>
+        <div class="todo-text">
+          <strong>Verify Python installation</strong><br>
+          <span>Run <code>python --version</code> in terminal. Install from python.org if missing.</span>
+        </div>
+      </li>
+      <li>
+        <div class="todo-num">2</div>
+        <div class="todo-text">
+          <strong>Create bot/ folder and requirements.txt</strong><br>
+          <span>Set up FastAPI, spaCy, sentence-transformers, mysql-connector-python.</span>
+        </div>
+      </li>
+      <li>
+        <div class="todo-num">3</div>
+        <div class="todo-text">
+          <strong>Install Python dependencies</strong><br>
+          <span>Run <code>pip install -r requirements.txt</code> and download spaCy model.</span>
+        </div>
+      </li>
+      <li>
+        <div class="todo-num">4</div>
+        <div class="todo-text">
+          <strong>Build db.py — connect Python to MySQL</strong><br>
+          <span>Connect to local XAMPP and Aiven. Write product search queries.</span>
+        </div>
+      </li>
+      <li>
+        <div class="todo-num">5</div>
+        <div class="todo-text">
+          <strong>Build analyzer.py — intent detection</strong><br>
+          <span>spaCy tokenization, keyword matching, budget extraction.</span>
+        </div>
+      </li>
+      <li>
+        <div class="todo-num">6</div>
+        <div class="todo-text">
+          <strong>Build responder.py — response formatter</strong><br>
+          <span>Format product cards with emoji, prices in ฿, star ratings.</span>
+        </div>
+      </li>
+      <li>
+        <div class="todo-num">7</div>
+        <div class="todo-text">
+          <strong>Build main.py — FastAPI /analyze endpoint</strong><br>
+          <span>Wire analyzer → db → responder. Return JSON reply.</span>
+        </div>
+      </li>
+      <li>
+        <div class="todo-num">8</div>
+        <div class="todo-text">
+          <strong>Update Node.js chat.js — call Python bot</strong><br>
+          <span>Add @abona trigger detection and 30-second admin-away timer.</span>
+        </div>
+      </li>
+      <li>
+        <div class="todo-num">9</div>
+        <div class="todo-text">
+          <strong>Test locally (two terminals)</strong><br>
+          <span>Node.js on port 3000, Python bot on port 8000. Test all intents.</span>
+        </div>
+      </li>
+      <li>
+        <div class="todo-num">10</div>
+        <div class="todo-text">
+          <strong>Deploy Python bot to Render</strong><br>
+          <span>Create second free Render service. Add DB env vars. Update Node.js BOT_URL.</span>
+        </div>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<!-- 10 — LOCAL DEV SETUP -->
+<div class="section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num">10</div>
+      <h2 class="section-title">Local Development Setup</h2>
+    </div>
+
+    <p>During development, both services run simultaneously in separate terminals on different ports.</p>
+
+    <pre># Terminal 1 — Node.js backend (existing)
+cd backend
+npm start
+# → Running on http://localhost:3000
+
+# Terminal 2 — Python AI bot (new)
+cd bot
+uvicorn main:app --reload --port 8000
+# → Running on http://localhost:8000</pre>
+
+    <h3>Environment Variables (bot/.env)</h3>
+    <pre>BOT_PORT=8000
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=abona_shop</pre>
+
+    <h3>New Node.js Environment Variable</h3>
+    <pre># Add to backend/.env
+BOT_URL=http://localhost:8000
+
+# In production (Render)
+BOT_URL=https://abona-bot.onrender.com</pre>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div style="background:var(--plum);color:rgba(255,255,255,0.5);text-align:center;padding:32px;font-size:0.82rem">
+  Abona Shop · AI Chatbot Plan · Hermann N'zi Ngenda · April 2026
+</div>
+
+</body>
+</html>

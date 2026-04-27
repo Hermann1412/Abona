@@ -277,6 +277,7 @@
       import { loadCart, getCartQuantity } from './data/cart.js';
       import { formatCurrency } from './scripts/utils/money.js';
       import { API_BASE } from './scripts/utils/api.js';
+      import { initChat } from './scripts/chat.js';
 
       const STATUS_ORDER = ['pending', 'paid', 'shipped', 'delivered'];
 
@@ -419,7 +420,8 @@
       }
 
       async function init() {
-        await initAuth();
+        const user = await initAuth();
+        initChat(user);
         await loadCart();
         updateCartBadge(getCartQuantity());
 

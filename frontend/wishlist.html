@@ -172,9 +172,11 @@
       import { loadCart, addToCart, getCartQuantity } from './data/cart.js';
       import { formatCurrency } from './scripts/utils/money.js';
       import { API_BASE } from './scripts/utils/api.js';
+      import { initChat } from './scripts/chat.js';
 
       async function init() {
         const user = await initAuth();
+        initChat(user);
         await loadCart();
         updateCartBadge(getCartQuantity());
 

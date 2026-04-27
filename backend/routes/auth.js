@@ -248,4 +248,16 @@ router.get('/me', (req, res) => {
   }
 });
 
+// GET /api/auth/token — return raw JWT for Socket.io auth
+router.get('/token', (req, res) => {
+  const token = req.cookies?.token;
+  if (!token) return res.status(401).json({ error: 'Not authenticated' });
+  try {
+    jwt.verify(token, process.env.JWT_SECRET);
+    return res.json({ token });
+  } catch {
+    return res.status(401).json({ error: 'Invalid session' });
+  }
+});
+
 export default router;

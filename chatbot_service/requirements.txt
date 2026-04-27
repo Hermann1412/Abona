@@ -1,0 +1,14 @@
+fastapi==0.110.0
+uvicorn[standard]==0.29.0
+mysql-connector-python==8.3.0
+python-dotenv==1.0.1
+pydantic==2.6.4
+
+# --- OPTIONAL ---
+# spaCy gives slightly better tokenization but requires Microsoft Visual C++
+# Build Tools on Windows (or pre-built wheels). The bot works fine without it
+# — analyzer.py automatically falls back to a regex tokenizer.
+# To enable: uncomment the next two lines AND install MS Build Tools, OR
+# upgrade to Python 3.10/3.11/3.12 which has pre-built spaCy wheels.
+# spacy==3.7.4
+# sentence-transformers==2.6.1

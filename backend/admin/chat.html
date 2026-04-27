@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live Chat — Abona Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/assets/admin.css">
+  <style>
+    .chat-layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      height: calc(100vh - 64px);
+      gap: 0;
+    }
+
+    /* ── Conversation list ── */
+    .conv-list {
+      border-right: 1px solid #e2e8f0;
+      overflow-y: auto;
+      background: #fff;
+    }
+    .conv-list-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #e2e8f0;
+      font-weight: 600;
+      font-size: 14px;
+      color: #374151;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .conv-item {
+      padding: 14px 20px;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .conv-item:hover { background: #f8fafc; }
+    .conv-item.active { background: #fdf2f6; border-left: 3px solid #c73060; }
+    .conv-item-name { font-weight: 600; font-size: 14px; color: #1e2022; }
+    .conv-item-email { font-size: 12px; color: #8c95a6; margin-top: 2px; }
+    .conv-item-preview { font-size: 12px; color: #64748b; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .conv-item-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+    .conv-item-time { font-size: 11px; color: #aaa; }
+    .unread-badge {
+      background: #c73060; color: #fff;
+      font-size: 11px; font-weight: 700;
+      padding: 2px 7px; border-radius: 10px;
+    }
+    .conv-empty { padding: 40px 20px; text-align: center; color: #aaa; font-size: 13px; }
+
+    /* ── Chat panel ── */
+    .chat-panel {
+      display: flex;
+      flex-direction: column;
+      background: #faf9fc;
+    }
+    .chat-panel-header {
+      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .chat-panel-name { font-weight: 700; font-size: 15px; color: #1e2022; }
+    .chat-panel-email { font-size: 12px; color: #8c95a6; }
+    .close-conv-btn {
+      background: #fee2e2; color: #c40000;
+      border: none; border-radius: 6px;
+      padding: 6px 14px; font-size: 12px; font-weight: 600;
+      cursor: pointer;
+    }
+    .close-conv-btn:hover { background: #fecaca; }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .chat-bubble {
+      max-width: 65%;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 13px;
+      line-height: 1.55;
+      word-break: break-word;
+    }
+    .chat-bubble.customer {
+      background: #fff;
+      border: 1px solid #e0d8f0;
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+      color: #1e2022;
+    }
+    .chat-bubble.admin {
+      background: #c73060;
+      color: #fff;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+    .bubble-meta { font-size: 10px; opacity: 0.6; margin-top: 4px; }
+
+    .chat-input-area {
+      padding: 14px 24px;
+      border-top: 1px solid #e2e8f0;
+      background: #fff;
+      display: flex;
+      gap: 10px;
+    }
+    #admin-chat-input {
+      flex: 1;
+      border: 1px solid #d0c8e8;
+      border-radius: 22px;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+    }
+    #admin-chat-input:focus { border-color: #c73060; }
+    #admin-chat-send {
+      background: #c73060;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 40px; height: 40px;
+      cursor: pointer;
+      font-size: 17px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    #admin-chat-send:hover { background: #a02050; }
+
+    .no-conv-selected {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      color: #aaa;
+    }
+    .no-conv-selected .icon { font-size: 48px; }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><h2>Abona Admin</h2><span>Control Panel</span></div>
+    <ul class="sidebar-nav">
+      <li><a href="/admin/dashboard"><span class="icon">📊</span> Dashboard</a></li>
+      <li><a href="/admin/orders"><span class="icon">📦</span> Orders</a></li>
+      <li><a href="/admin/products"><span class="icon">🛍️</span> Products</a></li>
+      <li><a href="/admin/users"><span class="icon">👥</span> Users</a></li>
+      <li><a href="/admin/chat"><span class="icon">💬</span> Live Chat <span id="sidebar-unread" style="background:#c73060;color:#fff;font-size:11px;padding:1px 6px;border-radius:8px;margin-left:4px;display:none"></span></a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="admin-name">Admin</div>
+      <div class="admin-email">Loading...</div>
+      <button class="logout-btn">Sign out</button>
+    </div>
+  </aside>
+
+  <div class="main-content" style="padding:0;display:flex;flex-direction:column;">
+    <div class="topbar"><h1>Live Chat</h1></div>
+
+    <div class="chat-layout">
+      <!-- Conversation list -->
+      <div class="conv-list">
+        <div class="conv-list-header">
+          <span>Conversations</span>
+          <button onclick="loadConversations()" style="background:none;border:none;cursor:pointer;font-size:16px" title="Refresh">🔄</button>
+        </div>
+        <div id="conv-list-body">
+          <div class="conv-empty">Loading...</div>
+        </div>
+      </div>
+
+      <!-- Chat panel -->
+      <div class="chat-panel" id="chat-panel">
+        <div class="no-conv-selected">
+          <div class="icon">💬</div>
+          <div>Select a conversation to start chatting</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="/admin/assets/admin.js"></script>
+<script>
+  let socket = null;
+  let activeConvId = null;
+  let adminId = null;
+
+  function formatTime(iso) {
+    return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function formatDate(iso) {
+    const d = new Date(iso);
+    const today = new Date();
+    if (d.toDateString() === today.toDateString()) return formatTime(iso);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  async function loadConversations() {
+    const res = await fetch('/api/chat/conversations', { credentials: 'include' });
+    if (!res.ok) { showToast('Failed to load conversations', true); return; }
+    const convs = await res.json();
+
+    const body = document.getElementById('conv-list-body');
+    if (!convs.length) {
+      body.innerHTML = '<div class="conv-empty">No conversations yet.</div>';
+      return;
+    }
+
+    const totalUnread = convs.reduce((s, c) => s + (c.unread || 0), 0);
+    const badge = document.getElementById('sidebar-unread');
+    if (totalUnread > 0) {
+      badge.textContent = totalUnread;
+      badge.style.display = 'inline';
+    } else {
+      badge.style.display = 'none';
+    }
+
+    body.innerHTML = convs.map(c => `
+      <div class="conv-item ${c.id === activeConvId ? 'active' : ''}"
+           data-id="${c.id}"
+           data-name="${c.user_name.replace(/"/g,'&quot;')}"
+           data-email="${c.user_email.replace(/"/g,'&quot;')}">
+        <div class="conv-item-name">${c.user_name}</div>
+        <div class="conv-item-email">${c.user_email}</div>
+        <div class="conv-item-meta">
+          <span class="conv-item-time">${formatDate(c.updated_at)}</span>
+          ${c.unread > 0 ? `<span class="unread-badge">${c.unread}</span>` : ''}
+        </div>
+        <div style="font-size:11px;margin-top:3px">
+          <span style="background:${c.status==='open'?'#dcfce7':'#fee2e2'};color:${c.status==='open'?'#16a34a':'#c40000'};padding:1px 7px;border-radius:8px;font-weight:600">${c.status}</span>
+        </div>
+      </div>`).join('');
+
+    body.querySelectorAll('.conv-item').forEach(el => {
+      el.addEventListener('click', () => {
+        openConversation(Number(el.dataset.id), el.dataset.name, el.dataset.email);
+      });
+    });
+  }
+
+  async function openConversation(convId, userName, userEmail) {
+    activeConvId = convId;
+
+    if (socket?.connected) socket.emit('admin:join', convId);
+
+    document.querySelectorAll('.conv-item').forEach(el => {
+      el.classList.toggle('active', Number(el.dataset.id) === convId);
+    });
+
+    // Load messages
+    const res = await fetch(`/api/chat/conversation/${convId}/messages`, { credentials: 'include' });
+    if (!res.ok) { showToast('Failed to load messages', true); return; }
+    const msgs = await res.json();
+
+    const panel = document.getElementById('chat-panel');
+    panel.innerHTML = `
+      <div class="chat-panel-header">
+        <div>
+          <div class="chat-panel-name">${userName}</div>
+          <div class="chat-panel-email">${userEmail}</div>
+        </div>
+        <button class="close-conv-btn" onclick="closeConversation(${convId})">✕ Close chat</button>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        ${msgs.length === 0 ? '<div style="text-align:center;color:#aaa;margin:auto">No messages yet</div>' : ''}
+      </div>
+      <div class="chat-input-area">
+        <input id="admin-chat-input" type="text" placeholder="Type a reply…" maxlength="500">
+        <button id="admin-chat-send">➤</button>
+      </div>`;
+
+    const messagesEl = document.getElementById('chat-messages');
+    msgs.forEach(m => messagesEl.appendChild(buildBubble(m)));
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    const input = document.getElementById('admin-chat-input');
+    const sendBtn = document.getElementById('admin-chat-send');
+
+    function sendMessage() {
+      const text = input.value.trim();
+      if (!text || !socket) return;
+      socket.emit('admin:message', { conversationId: convId, message: text });
+      input.value = '';
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+    input.focus();
+
+    // Refresh conversation list to clear unread badge
+    loadConversations();
+  }
+
+  function buildBubble(msg) {
+    const div = document.createElement('div');
+    const isMine = msg.sender_type === 'admin';
+    div.className = `chat-bubble ${msg.sender_type}`;
+    div.innerHTML = `${msg.message}<div class="bubble-meta">${isMine ? 'You' : 'Customer'} · ${formatTime(msg.created_at)}</div>`;
+    return div;
+  }
+
+  async function closeConversation(convId) {
+    if (!confirm('Close this conversation?')) return;
+    await fetch(`/api/chat/conversation/${convId}/close`, { method: 'PATCH', credentials: 'include' });
+    showToast('Conversation closed');
+    document.getElementById('chat-panel').innerHTML = `
+      <div class="no-conv-selected">
+        <div class="icon">💬</div>
+        <div>Select a conversation to start chatting</div>
+      </div>`;
+    activeConvId = null;
+    loadConversations();
+  }
+
+  // Init socket for admin
+  async function initSocket(adminToken) {
+    socket = io({ auth: { token: adminToken }, transports: ['websocket', 'polling'] });
+
+    socket.on('connect', () => {
+      // Rejoin active conversation room after reconnect
+      if (activeConvId) socket.emit('admin:join', activeConvId);
+    });
+
+    socket.on('connect_error', (err) => {
+      console.warn('Admin chat socket error:', err.message);
+    });
+
+    socket.on('chat:message', (msg) => {
+      if (Number(msg.conversation_id) !== Number(activeConvId)) return;
+      const messagesEl = document.getElementById('chat-messages');
+      if (!messagesEl) return;
+      // Remove "no messages yet" placeholder
+      const placeholder = messagesEl.querySelector('div[style*="color:#aaa"]');
+      if (placeholder) placeholder.remove();
+      messagesEl.appendChild(buildBubble(msg));
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    });
+
+    socket.on('admin:new_message', ({ conversationId, userName }) => {
+      if (Number(conversationId) !== Number(activeConvId)) {
+        showToast(`💬 New message from ${userName}`);
+      }
+      loadConversations();
+    });
+  }
+
+  guardAdmin().then(async admin => {
+    if (!admin) return;
+    adminId = admin.id;
+
+    // Get admin token for socket
+    const res = await fetch('/admin/api/token', { credentials: 'include' });
+    if (res.ok) {
+      const { token } = await res.json();
+      await initSocket(token);
+    }
+
+    loadConversations();
+  });
+</script>
+</body>
+</html>

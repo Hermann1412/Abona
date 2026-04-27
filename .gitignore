@@ -17,3 +17,21 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+chatbot_service/abona_test.db
+chatbot/
+
+# One-off scripts with hardcoded credentials
+backend/db/aiven-setup.js
+backend/db/convert-prices.js
+backend/db/create-admin.js

@@ -390,13 +390,15 @@
     import { initAuth, requireAuth, updateCartBadge } from './scripts/auth.js';
     import { loadCart, getCartQuantity } from './data/cart.js';
     import { API_BASE } from './scripts/utils/api.js';
+    import { initChat } from './scripts/chat.js';
 
     let profile = null;
-    let pendingAvatarUrl = null; // URL after upload, applied on Save
+    let pendingAvatarUrl = null;
 
     async function init() {
-      await initAuth();
+      const user = await initAuth();
       if (!requireAuth()) return;
+      initChat(user);
 
       await loadCart();
       updateCartBadge(getCartQuantity());

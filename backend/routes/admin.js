@@ -49,6 +49,10 @@ router.get('/coupons', requireAdminPage, (req, res) => {
   res.sendFile(join(ADMIN_DIR, 'coupons.html'));
 });
 
+router.get('/chat', requireAdminPage, (req, res) => {
+  res.sendFile(join(ADMIN_DIR, 'chat.html'));
+});
+
 // Serve admin static assets (CSS, JS) — only from the admin folder
 router.use('/assets', express.static(join(ADMIN_DIR, 'assets')));
 
@@ -111,6 +115,12 @@ router.post('/api/logout', (req, res) => {
 // GET /admin/api/me — validate admin token for client-side auth checks
 router.get('/api/me', requireAdminAPI, (req, res) => {
   res.json({ admin: req.admin });
+});
+
+// GET /admin/api/token — return raw admin JWT for Socket.io auth
+router.get('/api/token', requireAdminAPI, (req, res) => {
+  const token = req.cookies?.admin_token;
+  res.json({ token });
 });
 
 // ─── Dashboard stats ──────────────────────────────────────────────────────────

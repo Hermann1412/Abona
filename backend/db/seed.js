@@ -17,9 +17,10 @@ async function seed() {
     console.log(`Seeding ${products.length} products...`);
 
     for (const p of products) {
+      const slug = p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
       await conn.execute(
-        `INSERT INTO products (id, name, image, price_cents, stars, rating_count, type, size_chart, keywords)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `INSERT INTO products (id, name, slug, image, price_cents, base_price_cents, stars, rating_count, type, size_chart, keywords)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON DUPLICATE KEY UPDATE
            name = VALUES(name),
            price_cents = VALUES(price_cents),
@@ -28,7 +29,9 @@ async function seed() {
         [
           p.id,
           p.name,
+          slug,
           p.image,
+          p.priceCents,
           p.priceCents,
           p.rating.stars,
           p.rating.count,

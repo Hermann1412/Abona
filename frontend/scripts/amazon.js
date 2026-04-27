@@ -1,5 +1,6 @@
 import { cart, loadCart, addToCart, getCartQuantity } from '../data/cart.js';
 import { initAuth, updateCartBadge } from './auth.js';
+import { initChat } from './chat.js';
 import { formatCurrency } from './utils/money.js';
 import { API_BASE } from './utils/api.js';
 
@@ -290,6 +291,7 @@ function setupCategories() {
 async function init() {
   const user = await initAuth();
   isLoggedIn = !!user;
+  initChat(user);
   await Promise.all([loadCart(), isLoggedIn ? loadWishlistIds() : Promise.resolve()]);
   updateCartBadge(getCartQuantity());
 

@@ -260,6 +260,7 @@
       import { loadCart, addToCart, getCartQuantity } from './data/cart.js';
       import { formatCurrency } from './scripts/utils/money.js';
       import { API_BASE } from './scripts/utils/api.js';
+      import { initChat } from './scripts/chat.js';
 
       let currentProduct = null;
       let currentUser    = null;
@@ -268,6 +269,7 @@
       async function init() {
         [currentUser] = await Promise.all([initAuth(), loadCart()]);
         currentUser = getCurrentUser();
+        initChat(currentUser);
         updateCartBadge(getCartQuantity());
 
         document.querySelector('.js-search-btn').addEventListener('click', () => {
