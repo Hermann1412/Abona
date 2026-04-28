@@ -173,6 +173,7 @@ export function registerSocketHandlers(io) {
           socket.emit('chat:message', rows[0]);
           // Deliver directly to the customer's socket
           const customerSocketId = customerSocketMap.get(Number(conversationId));
+          console.log(`[admin:message] conv ${conversationId} → customer socket: ${customerSocketId || 'NOT FOUND'}`);
           if (customerSocketId) io.to(customerSocketId).emit('chat:message', rows[0]);
         } catch (err) {
           console.error('Admin message error:', err);
@@ -204,6 +205,12 @@ export function registerSocketHandlers(io) {
             "UPDATE chat_messages SET is_read = TRUE WHERE conversation_id = ? AND sender_type = 'admin'",
             [conv.id]
           );
+          // Register socket immediately so admin messages can reach this customer
+          customerSocketMap.set(conv.id, socket.id);
+          socket.on('disconnect', () => {
+            if (customerSocketMap.get(conv.id) === socket.id)
+              customerSocketMap.delete(conv.id);
+          });
           callback({ conversationId: conv.id, messages });
         } catch (err) {
           console.error('customer:init error:', err);
