@@ -253,7 +253,9 @@ export function registerSocketHandlers(io) {
             const bot = await askBot(message, conversationId);
             if (bot?.reply) {
               const botMsg = await saveBotMessage(conversationId, bot.reply);
-              socket.emit('chat:message', { ...botMsg, products: bot.products || [] });
+              const payload = { ...botMsg, products: bot.products || [] };
+              socket.emit('chat:message', payload);
+              io.to(`conv:${conversationId}`).emit('chat:message', payload);
             }
             return; // skip 30s timer when bot already replied
           }
@@ -265,8 +267,10 @@ export function registerSocketHandlers(io) {
             const bot = await askBot(message, conversationId, true);
             if (bot?.reply) {
               const botMsg = await saveBotMessage(conversationId, bot.reply);
+              const payload = { ...botMsg, products: [] };
               const custId = customerSocketMap.get(Number(conversationId));
-              if (custId) io.to(custId).emit('chat:message', { ...botMsg, products: [] });
+              if (custId) io.to(custId).emit('chat:message', payload);
+              io.to(`conv:${conversationId}`).emit('chat:message', payload);
             }
           }, AUTO_REPLY_DELAY);
           adminReplyTimers.set(conversationId, timer);
