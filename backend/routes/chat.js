@@ -263,9 +263,20 @@ export function registerSocketHandlers(io) {
               const payload = { ...botMsg, products: bot.products || [] };
               socket.emit('chat:message', payload);
               socket.to(`conv:${conversationId}`).emit('chat:message', payload);
-              return; // bot replied — skip 30s timer
+            } else {
+              // Bot sleeping — retry after 20s using its own timer so admin
+              // messages cannot cancel it via adminReplyTimers
+              setTimeout(async () => {
+                const retry = await askBot(message, conversationId, true);
+                if (retry?.reply) {
+                  const botMsg = await saveBotMessage(conversationId, retry.reply);
+                  const payload = { ...botMsg, products: retry.products || [] };
+                  socket.emit('chat:message', payload);
+                  socket.to(`conv:${conversationId}`).emit('chat:message', payload);
+                }
+              }, 20000);
             }
-            // bot offline/sleeping — fall through to 30s timer as retry
+            return; // @abona never goes through the admin-cancellable timer
           }
 
           // Start 30-second timer — if admin doesn't reply, bot sends auto-reply
