@@ -126,16 +126,27 @@ pingBot(); // warm up on server start
 setInterval(pingBot, 9 * 60 * 1000);
 
 async function askBot(message, conversationId, forceAutoReply = false) {
+  console.log(`[bot] calling ${BOT_URL}/analyze | conv=${conversationId} force=${forceAutoReply} msg="${message.slice(0, 60)}"`);
   try {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 25000);
     const res = await fetch(`${BOT_URL}/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, conversation_id: String(conversationId), force_auto_reply: forceAutoReply })
+      body: JSON.stringify({ message, conversation_id: String(conversationId), force_auto_reply: forceAutoReply }),
+      signal: controller.signal
     });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null; // bot offline — fail silently
+    clearTimeout(t);
+    if (!res.ok) {
+      console.error(`[bot] HTTP ${res.status} from ${BOT_URL}/analyze`);
+      return null;
+    }
+    const data = await res.json();
+    console.log(`[bot] intent=${data.intent} reply="${(data.reply || '').slice(0, 80)}"`);
+    return data;
+  } catch (err) {
+    console.error(`[bot] fetch failed: ${err.message} | BOT_URL=${BOT_URL}`);
+    return null;
   }
 }
 
