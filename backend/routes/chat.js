@@ -210,6 +210,7 @@ export function registerSocketHandlers(io) {
       });
 
       socket.on('customer:message', async ({ conversationId, message }) => {
+        console.log(`[server] customer:message from socket ${socket.id}, conv ${conversationId}`);
         if (!message?.trim()) return;
         try {
           const [conv] = await pool.execute(
@@ -228,6 +229,7 @@ export function registerSocketHandlers(io) {
           );
           await pool.execute('UPDATE conversations SET updated_at = NOW() WHERE id = ?', [conversationId]);
           const [rows] = await pool.execute('SELECT * FROM chat_messages WHERE id = ?', [result.insertId]);
+          console.log(`[server] emitting chat:message to socket ${socket.id}`);
           socket.emit('chat:message', rows[0]);
           socket.to(`conv:${conversationId}`).emit('chat:message', rows[0]);
           io.emit('admin:new_message', { conversationId, userName: user.name });

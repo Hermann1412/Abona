@@ -246,6 +246,7 @@ export async function initChat(user) {
   });
 
   socket.on('chat:message', (msg) => {
+    console.log('[Chat] Received chat:message:', msg.sender_type, msg.message?.slice(0, 30));
     if (messagesEl.querySelector('.chat-empty')) messagesEl.innerHTML = '';
     messagesEl.appendChild(renderBubble(msg, user.id));
     scrollToBottom(messagesEl);
