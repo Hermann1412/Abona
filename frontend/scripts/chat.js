@@ -70,9 +70,22 @@ const CSS = `
     margin: auto; padding: 20px;
   }
   .chat-footer {
-    padding: 10px 12px; border-top: 1px solid #ede8f5;
+    position: relative; padding: 10px 12px; border-top: 1px solid #ede8f5;
     display: flex; gap: 8px; background: #fff;
   }
+  .chat-suggestions {
+    position: absolute; bottom: 100%; left: 12px; right: 12px;
+    background: #fff; border: 1px solid #e8e0f0; border-radius: 10px;
+    box-shadow: 0 -4px 16px rgba(30,16,64,0.12);
+    overflow: hidden; display: none; margin-bottom: 4px; z-index: 10;
+  }
+  .chat-suggestion-item {
+    padding: 9px 14px; font-size: 12px; color: #444; cursor: pointer;
+    border-bottom: 1px solid #f5f0fb; transition: background 0.12s;
+  }
+  .chat-suggestion-item:last-child { border-bottom: none; }
+  .chat-suggestion-item:hover { background: #fdf2f6; }
+  .chat-suggestion-item strong { color: #c73060; }
   #abona-chat-input {
     flex: 1; border: 1px solid #d8d0ea; border-radius: 20px;
     padding: 8px 14px; font-size: 13px; outline: none;
@@ -186,6 +199,7 @@ export async function initChat(user) {
       <div class="chat-empty">Connecting… 💬</div>
     </div>
     <div class="chat-footer">
+      <div class="chat-suggestions" id="abona-chat-suggestions"></div>
       <input id="abona-chat-input" type="text" placeholder="Type a message or @abona for instant help…" maxlength="500" disabled>
       <button id="abona-chat-send" disabled>➤</button>
     </div>`;
@@ -255,10 +269,45 @@ export async function initChat(user) {
     }
   });
 
+  // @abona prompt suggestions
+  const BOT_PROMPTS = [
+    '@abona show me kitchen products',
+    '@abona show me best sellers',
+    '@abona show me products under ฿1,000',
+    '@abona what is your return policy?',
+    '@abona how long does shipping take?',
+    '@abona what payment methods do you accept?',
+  ];
+  const suggestionsEl = box.querySelector('#abona-chat-suggestions');
+
+  function renderSuggestions(val) {
+    const q = val.toLowerCase();
+    const matches = BOT_PROMPTS.filter(p => p.toLowerCase().startsWith(q));
+    if (!matches.length) { suggestionsEl.style.display = 'none'; return; }
+    suggestionsEl.innerHTML = matches.map(p =>
+      `<div class="chat-suggestion-item" data-prompt="${p}">${p.replace('@abona', '<strong>@abona</strong>')}</div>`
+    ).join('');
+    suggestionsEl.querySelectorAll('.chat-suggestion-item').forEach(el => {
+      el.addEventListener('mousedown', (e) => {
+        e.preventDefault(); // keep input focused
+        input.value = el.dataset.prompt;
+        suggestionsEl.style.display = 'none';
+        input.focus();
+      });
+    });
+    suggestionsEl.style.display = 'block';
+  }
+
+  input.addEventListener('input', () => {
+    input.value.startsWith('@') ? renderSuggestions(input.value) : (suggestionsEl.style.display = 'none');
+  });
+  input.addEventListener('blur', () => setTimeout(() => { suggestionsEl.style.display = 'none'; }, 150));
+
   // Send message
   function sendMessage() {
     const text = input.value.trim();
     if (!text || !socket) return;
+    suggestionsEl.style.display = 'none';
     socket.emit('customer:message', { conversationId, message: text });
     input.value = '';
   }
