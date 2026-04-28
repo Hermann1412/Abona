@@ -333,7 +333,7 @@
 
   // Init socket for admin
   async function initSocket() {
-    socket = io({ withCredentials: true, transports: ['polling', 'websocket'] });
+    socket = io({ withCredentials: true, transports: ['polling', 'websocket'], auth: { isAdmin: true } });
 
     socket.on('connect', () => {
       // Rejoin active conversation room after reconnect

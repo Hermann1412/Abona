@@ -86,16 +86,22 @@ io.use((socket, next) => {
     const userToken  = get('token');
     const adminToken = get('admin_token');
 
-    // Check admin_token first so admin sessions are never mis-classified
-    // as customers when both cookies are present (e.g. testing both roles)
-    if (adminToken) {
+    // Admin panel passes auth.isAdmin=true explicitly — use admin_token
+    if (socket.handshake.auth?.isAdmin && adminToken) {
       socket.user = jwt.verify(adminToken, process.env.JWT_ADMIN_SECRET);
       socket.user.isAdmin = true;
       return next();
     }
+    // Customer connections use user token
     if (userToken) {
       socket.user = jwt.verify(userToken, process.env.JWT_SECRET);
       socket.user.isAdmin = false;
+      return next();
+    }
+    // Fallback: admin without user token
+    if (adminToken) {
+      socket.user = jwt.verify(adminToken, process.env.JWT_ADMIN_SECRET);
+      socket.user.isAdmin = true;
       return next();
     }
     return next(new Error('No auth cookie'));
