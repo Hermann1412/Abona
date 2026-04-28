@@ -205,7 +205,7 @@ export async function initChat(user) {
   // Connect using cookies for auth (no separate token fetch needed)
   socket = window.io(API_BASE, {
     withCredentials: true,
-    transports: ['websocket']
+    transports: ['polling', 'websocket']
   });
 
   socket.on('connect', () => {
