@@ -118,6 +118,13 @@ const BOT_URL = process.env.BOT_URL || 'http://localhost:8000';
 const AUTO_REPLY_DELAY = 30000; // 30 seconds
 const adminReplyTimers = new Map(); // conversationId → timer
 
+// Ping bot every 9 min so Render free-tier service doesn't sleep
+async function pingBot() {
+  try { await fetch(`${BOT_URL}/`); } catch {}
+}
+pingBot(); // warm up on server start
+setInterval(pingBot, 9 * 60 * 1000);
+
 async function askBot(message, conversationId, forceAutoReply = false) {
   try {
     const res = await fetch(`${BOT_URL}/analyze`, {
@@ -248,7 +255,7 @@ export function registerSocketHandlers(io) {
           socket.to(`conv:${conversationId}`).emit('chat:message', rows[0]);
           io.emit('admin:new_message', { conversationId, userName: user.name });
 
-          // If message contains @abona → reply instantly with bot
+          // If message contains @abona → try instant bot reply
           if (message.toLowerCase().includes('@abona')) {
             const bot = await askBot(message, conversationId);
             if (bot?.reply) {
@@ -256,8 +263,9 @@ export function registerSocketHandlers(io) {
               const payload = { ...botMsg, products: bot.products || [] };
               socket.emit('chat:message', payload);
               socket.to(`conv:${conversationId}`).emit('chat:message', payload);
+              return; // bot replied — skip 30s timer
             }
-            return; // skip 30s timer when bot already replied
+            // bot offline/sleeping — fall through to 30s timer as retry
           }
 
           // Start 30-second timer — if admin doesn't reply, bot sends auto-reply
