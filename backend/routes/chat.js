@@ -144,6 +144,9 @@ async function saveBotMessage(conversationId, text) {
 
 // ── Socket.io handlers ────────────────────────────────────────────────────────
 
+// conversationId → customer socketId (for direct delivery to customer)
+const customerSocketMap = new Map();
+
 export function registerSocketHandlers(io) {
   io.on('connection', (socket) => {
     const user = socket.user;
@@ -166,8 +169,11 @@ export function registerSocketHandlers(io) {
           );
           await pool.execute('UPDATE conversations SET updated_at = NOW() WHERE id = ?', [conversationId]);
           const [rows] = await pool.execute('SELECT * FROM chat_messages WHERE id = ?', [result.insertId]);
+          // Echo to admin sender
           socket.emit('chat:message', rows[0]);
-          socket.to(`conv:${conversationId}`).emit('chat:message', rows[0]);
+          // Deliver directly to the customer's socket
+          const customerSocketId = customerSocketMap.get(Number(conversationId));
+          if (customerSocketId) io.to(customerSocketId).emit('chat:message', rows[0]);
         } catch (err) {
           console.error('Admin message error:', err);
         }
@@ -207,6 +213,12 @@ export function registerSocketHandlers(io) {
 
       socket.on('customer:join', (conversationId) => {
         socket.join(`conv:${conversationId}`);
+        // Register this socket as the live customer for this conversation
+        customerSocketMap.set(Number(conversationId), socket.id);
+        socket.on('disconnect', () => {
+          if (customerSocketMap.get(Number(conversationId)) === socket.id)
+            customerSocketMap.delete(Number(conversationId));
+        });
       });
 
       socket.on('customer:message', async ({ conversationId, message }) => {
@@ -235,7 +247,6 @@ export function registerSocketHandlers(io) {
             if (bot?.reply) {
               const botMsg = await saveBotMessage(conversationId, bot.reply);
               socket.emit('chat:message', { ...botMsg, products: bot.products || [] });
-              socket.to(`conv:${conversationId}`).emit('chat:message', { ...botMsg, products: bot.products || [] });
             }
             return; // skip 30s timer when bot already replied
           }
@@ -247,7 +258,8 @@ export function registerSocketHandlers(io) {
             const bot = await askBot(message, conversationId, true);
             if (bot?.reply) {
               const botMsg = await saveBotMessage(conversationId, bot.reply);
-              io.to(`conv:${conversationId}`).emit('chat:message', { ...botMsg, products: [] });
+              const custId = customerSocketMap.get(Number(conversationId));
+              if (custId) io.to(custId).emit('chat:message', { ...botMsg, products: [] });
             }
           }, AUTO_REPLY_DELAY);
           adminReplyTimers.set(conversationId, timer);
