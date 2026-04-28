@@ -211,6 +211,11 @@ export function registerSocketHandlers(io) {
 
       socket.on('customer:message', async ({ conversationId, message }) => {
         console.log(`[server] customer:message from socket ${socket.id}, conv ${conversationId}`);
+        // Raw echo test — bypasses DB to confirm event delivery
+        socket.emit('chat:message', {
+          id: -1, conversation_id: conversationId, sender_type: 'customer',
+          sender_id: user.id, message: `[echo] ${message}`, is_read: 0, created_at: new Date()
+        });
         if (!message?.trim()) return;
         try {
           const [conv] = await pool.execute(
