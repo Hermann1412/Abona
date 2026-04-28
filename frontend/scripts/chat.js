@@ -186,7 +186,7 @@ export async function initChat(user) {
       <div class="chat-empty">Connecting… 💬</div>
     </div>
     <div class="chat-footer">
-      <input id="abona-chat-input" type="text" placeholder="Type a message…" maxlength="500" disabled>
+      <input id="abona-chat-input" type="text" placeholder="Type a message or @abona for instant help…" maxlength="500" disabled>
       <button id="abona-chat-send" disabled>➤</button>
     </div>`;
 
@@ -227,7 +227,7 @@ export async function initChat(user) {
         msgs.forEach(m => messagesEl.appendChild(renderBubble(m, user.id)));
         scrollToBottom(messagesEl);
       } else {
-        messagesEl.innerHTML = '<div class="chat-empty">No messages yet. Say hello! 👋</div>';
+        messagesEl.innerHTML = '<div class="chat-empty">No messages yet. Say hello! 👋<br><span style="font-size:11px;opacity:0.7">Tip: type <strong>@abona</strong> followed by your question for instant answers.</span></div>';
       }
 
       // Enable input

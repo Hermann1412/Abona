@@ -255,7 +255,7 @@ export function registerSocketHandlers(io) {
               const botMsg = await saveBotMessage(conversationId, bot.reply);
               const payload = { ...botMsg, products: bot.products || [] };
               socket.emit('chat:message', payload);
-              io.to(`conv:${conversationId}`).emit('chat:message', payload);
+              socket.to(`conv:${conversationId}`).emit('chat:message', payload);
             }
             return; // skip 30s timer when bot already replied
           }
@@ -268,8 +268,6 @@ export function registerSocketHandlers(io) {
             if (bot?.reply) {
               const botMsg = await saveBotMessage(conversationId, bot.reply);
               const payload = { ...botMsg, products: [] };
-              const custId = customerSocketMap.get(Number(conversationId));
-              if (custId) io.to(custId).emit('chat:message', payload);
               io.to(`conv:${conversationId}`).emit('chat:message', payload);
             }
           }, AUTO_REPLY_DELAY);
