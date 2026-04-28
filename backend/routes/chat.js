@@ -216,7 +216,10 @@ export function registerSocketHandlers(io) {
             'SELECT * FROM conversations WHERE id = ? AND user_id = ?',
             [conversationId, user.id]
           );
-          if (!conv.length) return;
+          if (!conv.length) {
+            console.warn(`customer:message blocked — conv ${conversationId} not found for user ${user.id}`);
+            return;
+          }
 
           // Save customer message
           const [result] = await pool.execute(
