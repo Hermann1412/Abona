@@ -177,7 +177,11 @@
       <div class="conv-list">
         <div class="conv-list-header">
           <span>Conversations</span>
-          <button onclick="loadConversations()" style="background:none;border:none;cursor:pointer;font-size:16px" title="Refresh">🔄</button>
+          <div style="display:flex;gap:5px;align-items:center">
+            <button id="filter-open" onclick="setFilter('open')" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid #c73060;background:#c73060;color:#fff;cursor:pointer;font-weight:600">Open</button>
+            <button id="filter-all" onclick="setFilter('all')" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid #d0c8e8;background:#fff;color:#374151;cursor:pointer;font-weight:600">All</button>
+            <button onclick="loadConversations()" style="background:none;border:none;cursor:pointer;font-size:16px" title="Refresh">🔄</button>
+          </div>
         </div>
         <div id="conv-list-body">
           <div class="conv-empty">Loading...</div>
@@ -202,6 +206,20 @@
   let socket = null;
   let activeConvId = null;
   let adminId = null;
+  let convFilter = 'open';
+
+  function setFilter(f) {
+    convFilter = f;
+    const btnOpen = document.getElementById('filter-open');
+    const btnAll  = document.getElementById('filter-all');
+    btnOpen.style.background   = f === 'open' ? '#c73060' : '#fff';
+    btnOpen.style.color        = f === 'open' ? '#fff' : '#374151';
+    btnOpen.style.borderColor  = f === 'open' ? '#c73060' : '#d0c8e8';
+    btnAll.style.background    = f === 'all'  ? '#c73060' : '#fff';
+    btnAll.style.color         = f === 'all'  ? '#fff' : '#374151';
+    btnAll.style.borderColor   = f === 'all'  ? '#c73060' : '#d0c8e8';
+    loadConversations();
+  }
 
   function formatTime(iso) {
     return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -220,11 +238,8 @@
     const convs = await res.json();
 
     const body = document.getElementById('conv-list-body');
-    if (!convs.length) {
-      body.innerHTML = '<div class="conv-empty">No conversations yet.</div>';
-      return;
-    }
 
+    // Always use full list for unread badge; apply filter only for display
     const totalUnread = convs.reduce((s, c) => s + (c.unread || 0), 0);
     const badge = document.getElementById('sidebar-unread');
     if (totalUnread > 0) {
@@ -234,7 +249,13 @@
       badge.style.display = 'none';
     }
 
-    body.innerHTML = convs.map(c => `
+    const filtered = convFilter === 'open' ? convs.filter(c => c.status === 'open') : convs;
+    if (!filtered.length) {
+      body.innerHTML = `<div class="conv-empty">${convFilter === 'open' ? 'No open conversations.' : 'No conversations yet.'}</div>`;
+      return;
+    }
+
+    body.innerHTML = filtered.map(c => `
       <div class="conv-item ${c.id === activeConvId ? 'active' : ''}"
            data-id="${c.id}"
            data-name="${c.user_name.replace(/"/g,'&quot;')}"
@@ -313,8 +334,11 @@
   function buildBubble(msg) {
     const div = document.createElement('div');
     const isMine = msg.sender_type === 'admin';
+    const isBot  = msg.is_bot || (msg.sender_type === 'admin' && msg.sender_id === 0);
     div.className = `chat-bubble ${msg.sender_type}`;
-    div.innerHTML = `${msg.message}<div class="bubble-meta">${isMine ? 'You' : 'Customer'} · ${formatTime(msg.created_at)}</div>`;
+    const formatted = (msg.message || '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+    const botLabel = isBot ? '<span style="font-size:10px;opacity:0.7;display:block;margin-bottom:3px">🤖 Abona Bot</span>' : '';
+    div.innerHTML = `${botLabel}${formatted}<div class="bubble-meta">${isBot ? 'Bot' : isMine ? 'You' : 'Customer'} · ${formatTime(msg.created_at)}</div>`;
     return div;
   }
 
