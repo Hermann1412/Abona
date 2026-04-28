@@ -246,7 +246,6 @@ export async function initChat(user) {
   });
 
   socket.on('chat:message', (msg) => {
-    console.log('[Chat] Received chat:message:', msg.sender_type, msg.message?.slice(0, 30));
     if (messagesEl.querySelector('.chat-empty')) messagesEl.innerHTML = '';
     messagesEl.appendChild(renderBubble(msg, user.id));
     scrollToBottom(messagesEl);
@@ -260,7 +259,6 @@ export async function initChat(user) {
   function sendMessage() {
     const text = input.value.trim();
     if (!text || !socket) return;
-    console.log('[Chat] Sending:', text, '| conv:', conversationId, '| connected:', socket.connected);
     socket.emit('customer:message', { conversationId, message: text });
     input.value = '';
   }

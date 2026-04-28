@@ -134,8 +134,8 @@ async function askBot(message, conversationId, forceAutoReply = false) {
 
 async function saveBotMessage(conversationId, text) {
   const [result] = await pool.execute(
-    'INSERT INTO chat_messages (conversation_id, sender_type, sender_id, message) VALUES (?, "admin", 0, ?)',
-    [conversationId, text]
+    'INSERT INTO chat_messages (conversation_id, sender_type, sender_id, message) VALUES (?, ?, ?, ?)',
+    [conversationId, 'admin', 0, text]
   );
   await pool.execute('UPDATE conversations SET updated_at = NOW() WHERE id = ?', [conversationId]);
   const [rows] = await pool.execute('SELECT * FROM chat_messages WHERE id = ?', [result.insertId]);
@@ -161,8 +161,8 @@ export function registerSocketHandlers(io) {
           adminReplyTimers.delete(conversationId);
 
           const [result] = await pool.execute(
-            'INSERT INTO chat_messages (conversation_id, sender_type, sender_id, message) VALUES (?, "admin", ?, ?)',
-            [conversationId, user.id, message.trim()]
+            'INSERT INTO chat_messages (conversation_id, sender_type, sender_id, message) VALUES (?, ?, ?, ?)',
+            [conversationId, 'admin', user.id, message.trim()]
           );
           await pool.execute('UPDATE conversations SET updated_at = NOW() WHERE id = ?', [conversationId]);
           const [rows] = await pool.execute('SELECT * FROM chat_messages WHERE id = ?', [result.insertId]);
@@ -210,31 +210,21 @@ export function registerSocketHandlers(io) {
       });
 
       socket.on('customer:message', async ({ conversationId, message }) => {
-        console.log(`[server] customer:message from socket ${socket.id}, conv ${conversationId}`);
-        // Raw echo test — bypasses DB to confirm event delivery
-        socket.emit('chat:message', {
-          id: -1, conversation_id: conversationId, sender_type: 'customer',
-          sender_id: user.id, message: `[echo] ${message}`, is_read: 0, created_at: new Date()
-        });
         if (!message?.trim()) return;
         try {
           const [conv] = await pool.execute(
             'SELECT * FROM conversations WHERE id = ? AND user_id = ?',
             [conversationId, user.id]
           );
-          if (!conv.length) {
-            console.warn(`customer:message blocked — conv ${conversationId} not found for user ${user.id}`);
-            return;
-          }
+          if (!conv.length) return;
 
           // Save customer message
           const [result] = await pool.execute(
-            'INSERT INTO chat_messages (conversation_id, sender_type, sender_id, message) VALUES (?, "customer", ?, ?)',
-            [conversationId, user.id, message.trim()]
+            'INSERT INTO chat_messages (conversation_id, sender_type, sender_id, message) VALUES (?, ?, ?, ?)',
+            [conversationId, 'customer', user.id, message.trim()]
           );
           await pool.execute('UPDATE conversations SET updated_at = NOW() WHERE id = ?', [conversationId]);
           const [rows] = await pool.execute('SELECT * FROM chat_messages WHERE id = ?', [result.insertId]);
-          console.log(`[server] emitting chat:message to socket ${socket.id}`);
           socket.emit('chat:message', rows[0]);
           socket.to(`conv:${conversationId}`).emit('chat:message', rows[0]);
           io.emit('admin:new_message', { conversationId, userName: user.name });
